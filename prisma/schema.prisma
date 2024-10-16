@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Define Enums
+enum TradeAction {
+  Buy
+  Sell
+  Short
+  Cover
+}
+
+enum TradeDirection {
+  Long
+  Short
+}
+
+enum TradeType {
+  Stock
+  Option
+  Future
+  Forex
+  Crypto
+}
+
+enum TradeStatus {
+  Open
+  Closed
+}
+
+enum TradeResult {
+  Win
+  Loss
+  BreakEven
+}
+
+enum ScalingAction {
+  Initial
+  ScaleIn
+  ProfitTaking
+  StopLoss
+}
+
+// Define Models
+model Trade {
+  id            String         @id @default(uuid())
+  startDate     DateTime
+  endDate       DateTime
+  executionTime Int
+  ticker        String
+  direction     TradeDirection
+  type          TradeType
+  status        TradeStatus
+  volume        Int
+  startPrice    Float
+  endPrice      Float
+  averagePrice  Float
+  amount        Float
+  commission    Float
+  fees          Float
+  pnl           Float
+  result        TradeResult
+  notes         String?
+  executions    Execution[]
+}
+
+model Execution {
+  id            String        @id @default(uuid())
+  date          DateTime
+  ticker        String
+  action        TradeAction
+  quantity      Int
+  amount        Float
+  tradePosition Int
+  price         Float
+  avgPrice      Float
+  scalingAction ScalingAction
+  pnl           Float
+  trade         Trade         @relation(fields: [tradeId], references: [id])
+  tradeId       String
+}
