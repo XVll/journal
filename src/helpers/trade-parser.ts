@@ -24,6 +24,9 @@ enum TradeStatus {
 enum TradeResult {
     Win, Loss, BreakEven
 }
+enum ScalingAction {
+    Initial,ScaleIn, ProfitTaking, StopLoss
+}
 
 export interface Trade {
     id: string;
@@ -53,10 +56,12 @@ export interface Execution {
     ticker: string; // AAPL
     action: TradeAction; // Buy
     quantity: number; // +100
-    price: number; // 100
     amount: number; // 10000
     commission: number; // 0
     tradePosition: number; // 0
+    price: number; // 100
+    avgPrice: number; // 0
+    scalingAction: ScalingAction; // Initial
     fees: number; // 0
     pnl: number;
 }
