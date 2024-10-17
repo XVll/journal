@@ -1,4 +1,4 @@
-import {Execution} from "@prisma/client";
+import {Execution, Trade, TradeAction} from "@prisma/client";
 import {startOfToday} from "date-fns";
 import {fromZonedTime, toZonedTime} from "date-fns-tz";
 
@@ -14,20 +14,6 @@ export interface DasSchema {
     SecType: string;
 }
 
-/* Execution
-* ScalingAction: Calculate the scaling action based on the previous trade
-* TradePosition: Calculate the trade position based on the previous trade
-* Action: Calculate the action based on the Side and the previous trade
-* AvgPrice: Calculate the average price of the trade after this execution
-* Date set the date to the current date and time to gmt (data is in eastern time)
-*/
-
-/*
-* Trade
-* Equity/ETF
-* Commissions: Add a checkbox to add commissions if there is none in the data
-* Fees: Add a checkbox to add fees if there is none in the data
- */
 export type TradeMapper<T> = (input: T) => Execution;
 export const DasTradeMapper: TradeMapper<DasSchema> = (input: DasSchema) => {
     return {
@@ -37,6 +23,7 @@ export const DasTradeMapper: TradeMapper<DasSchema> = (input: DasSchema) => {
         pnl: input['P / L'],
         amount: input.Qty * input.Price,
         date: setTime(input.Time),
+        action: input.Side === 'B' ? TradeAction.Buy : TradeAction.Sell,
     } as Execution;
 }
 const setTime = (time: string) => {

@@ -11,8 +11,6 @@ datasource db {
 enum TradeAction {
   Buy
   Sell
-  Short
-  Cover
 }
 
 enum TradeDirection {
@@ -50,21 +48,20 @@ enum ScalingAction {
 model Trade {
   id            String         @id @default(uuid())
   startDate     DateTime
-  endDate       DateTime
+  endDate       DateTime?
   executionTime Int
   ticker        String
   direction     TradeDirection
   type          TradeType
-  status        TradeStatus
+  status        TradeStatus    @default(Open)
   volume        Int
   startPrice    Float
   endPrice      Float
   averagePrice  Float
-  amount        Float
   commission    Float
   fees          Float
   pnl           Float
-  result        TradeResult
+  result        TradeResult?
   notes         String?
   executions    Execution[]
 }
@@ -83,4 +80,6 @@ model Execution {
   pnl           Float
   trade         Trade         @relation(fields: [tradeId], references: [id])
   tradeId       String
+  fees          Float
+  commission    Float
 }

@@ -1,6 +1,15 @@
 import {TradeParser} from "@/helpers/Parsing/trade-parser";
 import {DasSchema, DasTradeMapper} from "@/helpers/Parsing/das-schema";
-import {Execution, Trade} from "@prisma/client";
+import {
+    Execution,
+    ScalingAction,
+    Trade,
+    TradeAction,
+    TradeDirection,
+    TradeResult,
+    TradeStatus,
+    TradeType
+} from "@prisma/client";
 
 
 export default async function Home() {
@@ -12,6 +21,7 @@ export default async function Home() {
     // parse csv file
 
     // All Executions
+    const account = "TRIB14396";
     const results = await TradeParser.parse<DasSchema>(data, DasTradeMapper);
     const trades = await CreateTrades(results);
 
@@ -27,32 +37,16 @@ export default async function Home() {
     );
 }
 
+
 /*
-model Trade {
-  id            String         @id @default(uuid())
-  startDate     DateTime
-  endDate       DateTime
-  executionTime Int
-  ticker        String
-  direction     TradeDirection
-  type          TradeType
-  status        TradeStatus
-  volume        Int
-  startPrice    Float
-  endPrice      Float
-  averagePrice  Float
-  amount        Float
-  commission    Float
-  fees          Float
-  pnl           Float
-  result        TradeResult
-  notes         String?
-  executions    Execution[]
-}
-*/
+* Trade
+* Equity/ETF
+* Commissions: Add a checkbox to add commissions if there is none in the data
+* Fees: Add a checkbox to add fees if there is none in the data
+ */
 const CreateTrades = async (executions: Execution[]) => {
     // First group executions by ticker
-    const Trades: Trade[] = [];
+    // const Trades: Trade[] = [];
     // Group by ticker
     const groupedExecutions = executions.reduce((acc, execution) => {
         if (!acc[execution.ticker]) {
@@ -62,13 +56,67 @@ const CreateTrades = async (executions: Execution[]) => {
         return acc;
     }, {} as Record<string, Execution[]>);
 
-    // Sort each group by date
-    const sortedGroups = Object.values(groupedExecutions).map((executions) => {
-        return executions.sort((a, b) => a.date.getTime() - b.date.getTime());
-    });
+    // Create Trades from each ticker
+    for (const ticker in groupedExecutions) {
+        /*
+        * Now we have Ticker and its executions, we will traverse through each execution and create a trade. If the direction is Long we will close the trade with a sell and if the direction is short we will close the trade with a buy.
+        */
+        const trade: Trade = {
+            ticker: ticker,
+            type: TradeType.Stock, // If equity/ETF
+            notes: "",
+            executions: [],
 
-    for (const executions of sortedGroups) {
+            startDate: "",// First execution date
+            startPrice: 0, // First execution price
+            direction: TradeDirection.Long, // If the first execution is long
 
+            volume: 0, // Total volume of executions
+            averagePrice: 0, // Average price of all executions
+            commissions: 0, // Total commission
+            fees: 0, // Total fees
+            pnl: 0, // Total pnl from all executions
+
+
+            executionTime: 0, // From first to last execution if the trade is closed else 0
+            endPrice: 0, // Last execution price
+            endDate: "",// Last execution date
+            result: TradeResult.Win, // If the trade is a win, loss, breakeven
+            status: TradeStatus.Open, // If the trade is open or closed
+        };
+        const executions = groupedExecutions[ticker].sort((a, b) => a.date.getTime() - b.date.getTime());
+        if (executions.length === 0) {
+            continue;
+        }
+        const tradeDirection = executions[0].action === TradeAction.Buy ? TradeDirection.Long : executions[0].action === TradeAction.Short ? TradeDirection.Short : null;
+
+        for (let i = 0; i < executions.length; i++) {
+            const execution = executions[i];
+            /* Execution
+            * ScalingAction: Calculate the scaling action based on the previous trade
+            * TradePosition: Calculate the trade position based on the previous trade
+            * AvgPrice: Calculate the average price of the trade after this execution
+            */
+            const firstExecution = i === 0;
+            if (firstExecution) {
+                execution.scalingAction = ScalingAction.Initial;
+                execution.tradePosition = execution.quantity;
+                execution.avgPrice = execution.price;
+            }
+            {
+                if (tradeDirection === TradeDirection.Long) {
+                    execution.scalingAction = execution.action === TradeAction.Buy ? ScalingAction.ScaleIn : execution.price > trade.averagePrice ? ScalingAction.ProfitTaking : ScalingAction.StopLoss;
+                    execution.tradePosition = execution.action === TradeAction.Buy ? trade.volume + execution.quantity : trade.volume - execution.quantity;
+                    execution.avgPrice = (trade.averagePrice * trade.volume + execution.price * execution.quantity) / (trade.volume + execution.quantity);
+                } else if (tradeDirection === TradeDirection.Short) {
+                    execution.scalingAction = execution.action === TradeAction.Sell ? ScalingAction.ScaleIn : execution.price < trade.averagePrice ? ScalingAction.ProfitTaking : ScalingAction.StopLoss;
+                    execution.tradePosition = execution.action === TradeAction.Sell ? trade.volume + execution.quantity : trade.volume - execution.quantity;
+                    execution.avgPrice = (trade.averagePrice * trade.volume + execution.price * execution.quantity) / (trade.volume + execution.quantity);
+                }
+                }
+
+            }
+
+        }
+        return groupedExecutions;
     }
-
-}
