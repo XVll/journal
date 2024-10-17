@@ -1,6 +1,6 @@
-import {Execution, Trade, TradeAction} from "@prisma/client";
-import {startOfToday} from "date-fns";
-import {fromZonedTime, toZonedTime} from "date-fns-tz";
+import {Execution, TradeAction} from "@prisma/client";
+import { startOfToday } from "date-fns";
+import {fromZonedTime} from "date-fns-tz";
 
 export interface DasSchema {
     Time: string;
@@ -24,6 +24,7 @@ export const DasTradeMapper: TradeMapper<DasSchema> = (input: DasSchema) => {
         amount: input.Qty * input.Price,
         date: setTime(input.Time),
         action: input.Side === 'B' ? TradeAction.Buy : TradeAction.Sell,
+        tradePosition: 0
     } as Execution;
 }
 const setTime = (time: string) => {

@@ -47,20 +47,22 @@ enum ScalingAction {
 // Define Models
 model Trade {
   id            String         @id @default(uuid())
+  account       String?
   startDate     DateTime
   endDate       DateTime?
-  executionTime Int
+  executionTime Int?
   ticker        String
   direction     TradeDirection
-  type          TradeType
+  type          TradeType      @default(Stock)
   status        TradeStatus    @default(Open)
-  volume        Int
-  startPrice    Float
-  endPrice      Float
-  averagePrice  Float
-  commission    Float
-  fees          Float
-  pnl           Float
+  volume        Int            @default(0)
+  buyVolume     Int            @default(0)
+  sellVolume    Int            @default(0)
+  openPosition  Int            @default(0)
+  averagePrice  Float          @default(0)
+  commission    Float          @default(0)
+  fees          Float          @default(0)
+  pnl           Float          @default(0)
   result        TradeResult?
   notes         String?
   executions    Execution[]
