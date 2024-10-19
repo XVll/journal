@@ -1,5 +1,21 @@
 import { Execution, ScalingAction, Trade, TradeAction, TradeDirection, TradeResult, TradeStatus, TradeType } from "@prisma/client";
 
+function CalculateCommission(execution: Execution) {
+  // 0.0035 for <300k, 0.0020 for <3m, 0.0015 for <20m
+  // You need to calculate monthly volume to determine the commission rate
+  return -0.002 * execution.quantity;
+}
+function CalculateFees(execution: Execution) {
+  const commission = CalculateCommission(execution);
+  const ecnFee = execution.addLiquidity ? 0.0021 * execution.quantity : -0.003 * execution.quantity;
+  const clearingFee = -0.0002 * execution.quantity;
+  const secTransactionFee = -0.0000278 * execution.quantity * execution.price;
+  const passThroughFee = -0.000175 * commission;
+  const finraFee = -0.00056 * commission;
+  const finraTradingActivityFee = -0.000166 * (execution.action == TradeAction.Sell ? execution.quantity : 0);
+  const finraConsolidatedAuditTrailFee = -0.000072 * execution.quantity;
+  return ecnFee + clearingFee + secTransactionFee + passThroughFee + finraFee + finraTradingActivityFee + finraConsolidatedAuditTrailFee;
+}
 export default async function CreateTrades(executions: Execution[], account: string) {
   // First group executions by ticker
   // const Trades: Trade[] = [];
@@ -29,6 +45,12 @@ export default async function CreateTrades(executions: Execution[], account: str
       }
       // Create an hashed identifier with ticker, date price and quantity
 
+      firstExecution.scalingAction = ScalingAction.Initial;
+      firstExecution.tradePosition = firstExecution.quantity;
+      firstExecution.avgPrice = firstExecution.price;
+      firstExecution.commission = CalculateCommission(firstExecution);
+      firstExecution.fees = CalculateFees(firstExecution);
+
       const trade: Trade & { executions: Execution[] } = {
         id: "",
 
@@ -55,9 +77,6 @@ export default async function CreateTrades(executions: Execution[], account: str
         executions: [],
       };
 
-      firstExecution.scalingAction = ScalingAction.Initial;
-      firstExecution.tradePosition = firstExecution.quantity;
-      firstExecution.avgPrice = firstExecution.price;
 
       trade.executions.push(firstExecution);
       trades.push(trade);
@@ -80,6 +99,9 @@ export default async function CreateTrades(executions: Execution[], account: str
             executions.unshift(newExecution);
           }
 
+
+          execution.commission = CalculateCommission(execution);
+          execution.fees = CalculateFees(execution);
           trade.volume += executionQuantity;
           trade.commission += execution.commission;
           trade.fees += execution.fees;
@@ -109,7 +131,7 @@ export default async function CreateTrades(executions: Execution[], account: str
           trade.openPosition = execution.tradePosition;
           execution.avgPrice = trade.averagePrice;
         } else if (trade.direction === TradeDirection.Short) {
-            let executionQuantity = execution?.quantity || 0;
+          let executionQuantity = execution?.quantity || 0;
 
           // Does execution closes the trade ? If so, adjust the quantity and add a new execution with the remaining quantity
           // If the execution is a sell and it partially closes the trade, add a new execution with the remaining quantity and it will appear as a short trade
@@ -119,6 +141,9 @@ export default async function CreateTrades(executions: Execution[], account: str
             newExecution.quantity = execution.quantity - trade.openPosition;
             executions.unshift(newExecution);
           }
+
+          execution.commission = CalculateCommission(execution);
+          execution.fees = CalculateFees(execution);
           trade.volume += executionQuantity;
           trade.commission += execution.commission;
           trade.fees += execution.fees;
@@ -126,8 +151,7 @@ export default async function CreateTrades(executions: Execution[], account: str
           if (execution.action === TradeAction.Sell) {
             trade.averagePrice = (trade.averagePrice * trade.sellVolume + execution.price * executionQuantity) / (trade.sellVolume + executionQuantity);
             trade.sellVolume += executionQuantity;
-          }
-          else if (execution.action === TradeAction.Buy) {
+          } else if (execution.action === TradeAction.Buy) {
             trade.buyVolume += executionQuantity;
           }
           if (execution.action === TradeAction.Buy) {

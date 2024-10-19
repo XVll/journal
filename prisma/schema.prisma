@@ -84,4 +84,5 @@ model Execution {
   tradeId       String
   fees          Float
   commission    Float
+  addLiquidity  Boolean
 }

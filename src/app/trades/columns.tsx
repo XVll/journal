@@ -48,10 +48,12 @@ export const columns: ColumnDef<Trade & {executions:Execution[]}>[] = [
   {
     accessorKey: "commission",
     header: "Commission",
+    cell : ({row}) => row.original.commission.toFixed(2),
   },
   {
     accessorKey: "fees",
     header: "Fees",
+    cell : ({row}) => row.original.fees.toFixed(2),
   },
   {
     accessorKey: "status",
