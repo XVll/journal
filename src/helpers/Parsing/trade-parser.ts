@@ -1,10 +1,11 @@
 import Papa, {ParseStepResult} from "papaparse";
 import {TradeMapper} from "@/helpers/Parsing/das-schema";
-import {Execution} from "@prisma/client";
+import { ExecutionInput } from "../../../prisma/types";
 
 export const TradeParser = {
-    parse<T>(data: string, mapper: TradeMapper<T>): Promise<Execution[]> {
-        const executions: Execution[] = [];
+    parse<T>(data: string, mapper: TradeMapper<T>, year: number, month: number, day: number): Promise<ExecutionInput[]> {
+        const executionInputs: ExecutionInput[] = [];
+
         return new Promise((resolve, reject) => {
                 Papa.parse<T>(data, {
                     worker: true,
@@ -13,12 +14,12 @@ export const TradeParser = {
                     skipEmptyLines: true,
                     step(results: ParseStepResult<T>) {
                         if (results.data) {
-                            const execution = mapper(results.data);
-                            executions.push(execution);
+                            const execution = mapper(results.data, year, month, day);
+                            executionInputs.push(execution);
                         }
                     },
                     complete: function () {
-                        resolve(executions);
+                        resolve(executionInputs);
                     },
                     error: function (error: Error) {
                         reject(error);

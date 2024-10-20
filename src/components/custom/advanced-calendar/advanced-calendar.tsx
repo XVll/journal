@@ -59,20 +59,17 @@ function AdvancedCalendar({
   monthStats: CalendarMonthStats;
   displayDate?: Date;
 }) {
-  const [selected, setSelected] = React.useState<Date | undefined>(displayDate || startOfToday());
+  const [selected] = React.useState<Date | undefined>(displayDate || startOfToday());
 
   return (
     <div className="flex">
       <DayPicker
-        mode="single"
         month={selected || startOfToday()}
-        onSelect={setSelected}
         modifiers={modifiers(dayStats)}
-        selected={selected}
         modifiersClassNames={{
-          winningDay: "!bg-background-green !text-foreground-green",
-          losingDay: "!bg-background-red !text-foreground-red",
-          breakEvenDay: "!bg-bakckground-b0 !text-foreground-f1",
+          winningDay: "!bg-background-green !text-foreground-green hover:!bg-foreground-green/10",
+          losingDay: "!bg-background-red !text-foreground-red hover:!bg-foreground-red/10",
+          breakEvenDay: "!bg-background-b0 !text-foreground-f1 hover:!bg-foreground-f1/10",
         }}
         showOutsideDays={showOutsideDays}
         className={cn("p-3 w-full", className)}
@@ -91,11 +88,14 @@ function AdvancedCalendar({
           row: "w-full mt-0 ",
           cell: cn(
             "relative p-[.1rem] text-center focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-range-end)]:rounded-r-md",
+            "!hover:bg-background-bt3 focus:bg-accent/10",
             props.mode === "range"
               ? "[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
               : "[&:has([aria-selected])]:rounded-md"
           ),
-          day: cn(buttonVariants({ variant: "ghost" }), "h-20 w-full text-xs  rounded-sm font-normal aria-selected:opacity-100 bg-accent"),
+          day: cn(buttonVariants({ variant: "ghost" }), "h-20 w-full text-xs  rounded-sm font-normal aria-selected:opacity-100 bg-background-bt1",
+            // "bg-[repeating-linear-gradient(45deg,var(--tw-gradient-stops))] from-background-bt2 from-[length:0_10px] to-background-bt1 to-[length:0_20px]",
+        ),
           day_range_start: "day-range-start",
           day_range_end: "day-range-end",
           day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",

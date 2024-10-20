@@ -9,6 +9,7 @@ import { Trade, TradeResult } from "@prisma/client";
 import { AdvancedCalendar, CalendarDayStats, CalendarWeekStats } from "@/components/custom/advanced-calendar/advanced-calendar";
 import { testTradeData } from "@/helpers/test-data";
 import { getWeek } from "date-fns";
+import  ThemeSwitch  from "@/components/custom/theme-switch";
 
 const generateTradeWeeksForMonth = (dailyStats: Record<string, CalendarDayStats>) => {
   const weeklyStats: Record<number, CalendarWeekStats> = {};
@@ -58,8 +59,9 @@ const generateTradeDaysForMonth = (trades: Trade[]) => {
 
 export default async function Home() {
   const account = "TRIB14396";
-  const results = await TradeParser.parse<DasSchema>(testTradeData, DasTradeMapper);
+  const results = await TradeParser.parse<DasSchema>(testTradeData, DasTradeMapper, 2024, 10, 1);
   const trades = await CreateTrades(results, account);
+  console.log(trades);
 
   const dayStats: Record<string, CalendarDayStats> = generateTradeDaysForMonth(trades);
   const weekStats = generateTradeWeeksForMonth(dayStats);
@@ -79,6 +81,7 @@ export default async function Home() {
 
   return (
     <div className="text-xs flex flex-col gap-4 p-4">
+      <ThemeSwitch/>
       <div className="flex justify-center align-middle border h-full w-full">
         <AdvancedCalendar dayStats={dayStats} weekStats={weekStats} monthStats={monthStats} displayDate={new Date(2024, 9, 1)} />
       </div>

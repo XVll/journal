@@ -8,9 +8,8 @@ import { UTCDate } from "@date-fns/utc";
 
 
 export const DayStats = ({ date, tradeDays }: DayContentProps & {tradeDays: Record<string, CalendarDayStats>}) => {
-    console.log(new UTCDate(date.getFullYear(), date.getMonth(), date.getDate()).toLocaleDateString());
   return (
-    <div className="flex w-full h-full">
+    <div className="flex w-full h-full ">
       <div className="w-full flex flex-col">
         <div className="flex justify-between">
           <div className="text-left align-top font-bold text-sm">{date.getDate()}</div>
