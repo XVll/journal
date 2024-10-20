@@ -17,8 +17,6 @@ function CalculateFees(execution: Execution) {
   return ecnFee + clearingFee + secTransactionFee + passThroughFee + finraFee + finraTradingActivityFee + finraConsolidatedAuditTrailFee;
 }
 export default async function CreateTrades(executions: Execution[], account: string) {
-  // First group executions by ticker
-  // const Trades: Trade[] = [];
   // Group by ticker
   const groupedExecutions = executions.reduce((acc, execution) => {
     if (!acc[execution.ticker]) {
@@ -30,6 +28,7 @@ export default async function CreateTrades(executions: Execution[], account: str
 
   const trades = [];
 
+  // Sort executions by date
   for (const ticker in groupedExecutions) {
     const executions = groupedExecutions[ticker].sort((a, b) => a.date.getTime() - b.date.getTime());
 
@@ -38,12 +37,12 @@ export default async function CreateTrades(executions: Execution[], account: str
     }
 
     while (executions.length > 0) {
+      // Start from the first execution and create a trade
       const firstExecution = executions.shift();
 
       if (!firstExecution) {
         continue;
       }
-      // Create an hashed identifier with ticker, date price and quantity
 
       firstExecution.scalingAction = ScalingAction.Initial;
       firstExecution.tradePosition = firstExecution.quantity;

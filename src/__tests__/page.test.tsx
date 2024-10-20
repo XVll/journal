@@ -3,6 +3,7 @@ import { DasSchema, DasTradeMapper } from "@/helpers/Parsing/das-schema";
 import { TradeParser } from "@/helpers/Parsing/trade-parser";
 import { TradeResult, TradeStatus } from "@prisma/client";
 import { expect, test } from "vitest";
+import { CalculateTotalPnL } from "@/helpers/stat-functions/stat-functions.ts"; // Ensure this path is correct
 
 test("Splits closing trade to another trade with remaining quantity", async () => {
   const data =
@@ -170,4 +171,21 @@ test("Handles Time as is if its same.", async () => {
   expect(trades[0].executionTime).toBe(0);
   // There should be 5 executions
   expect(trades[0].executions).length(5);
+});
+test("Calculate Total PnL", async () => {
+  const data =
+    "Time,Symbol,Side,Price,Qty,P / L,SecType,\n" +
+    "04:30:00,ABC,B,3.00,2000,0.00,Equity/ETF,\n" +
+    "04:30:00,ABC,S,1.00,2000,0.00,Equity/ETF,\n" +
+    "04:30:00,STEC,B,2.00,2000,0.00,Equity/ETF,\n" +
+    "04:30:00,STEC,S,3.00,2000,0.00,Equity/ETF,\n" +
+    "04:30:00,ATNT,B,2.00,1000,0.00,Equity/ETF,\n" +
+    "04:30:00,ATNT,B,2.00,1000,0.00,Equity/ETF,\n";
+  const results = await TradeParser.parse<DasSchema>(data, DasTradeMapper);
+  const account = "123";
+  const trades = await CreateTrades(results, account);
+
+  const totalPnl = CalculateTotalPnL(trades);
+
+  expect(totalPnl).toBe(-2000);
 });
