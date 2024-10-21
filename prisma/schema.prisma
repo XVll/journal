@@ -47,23 +47,23 @@ enum ScalingAction {
 // Define Models
 model Trade {
   id            String         @id @default(uuid())
-  account       String?
+  account       String
   startDate     DateTime
-  endDate       DateTime?
-  executionTime Int?
   ticker        String
   direction     TradeDirection
-  type          TradeType      @default(Stock)
-  status        TradeStatus    @default(Open)
-  volume        Int            @default(0)
-  buyVolume     Int            @default(0)
-  sellVolume    Int            @default(0)
-  openPosition  Int            @default(0)
-  averagePrice  Float          @default(0)
-  commission    Float          @default(0)
-  fees          Float          @default(0)
-  pnl           Float          @default(0)
+  type          TradeType      
+  status        TradeStatus    
+  volume        Int            
+  buyVolume     Int            
+  sellVolume    Int            
+  openPosition  Int            
+  averagePrice  Float          
+  commission    Float          
+  fees          Float          
+  pnl           Float          
+  endDate       DateTime?
   result        TradeResult?
+  executionTime Int?
   notes         String?
   executions    Execution[]
 }
@@ -80,10 +80,10 @@ model Execution {
   avgPrice      Float
   scalingAction ScalingAction
   pnl           Float
-  trade         Trade         @relation(fields: [tradeId], references: [id])
+  trade         Trade         @relation(fields: [tradeId], references: [id], onDelete: Cascade)
   tradeId       String
   fees          Float
-  type          TradeType?      @default(Stock)
+  type          TradeType      
   commission    Float
   addLiquidity  Boolean
   executionHash String

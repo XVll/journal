@@ -1,13 +1,22 @@
-import { Execution, ScalingAction, TradeAction, TradeDirection, TradeResult, TradeStatus, TradeType } from "@prisma/client";
-import { createHash } from "crypto";
-import { ExecutionInput, TradeWithExecutions } from "../../prisma/types";
-import { isDate } from "date-fns";
+import { ExecutionInput } from "@/db/types";
+import {
+    Execution,
+    Prisma,
+    ScalingAction,
+    TradeAction,
+    TradeDirection,
+    TradeResult,
+    TradeStatus,
+    TradeType
+} from "@prisma/client";
+import {createHash} from "crypto";
 
 function CalculateCommission(execution: ExecutionInput) {
     // 0.0035 for <300k, 0.0020 for <3m, 0.0015 for <20m
     // You need to calculate monthly volume to determine the commission rate
     return -0.002 * execution.quantity;
 }
+
 function CalculateFees(execution: ExecutionInput) {
     const commission = CalculateCommission(execution);
     const ecnFee = execution.addLiquidity ? 0.0021 * execution.quantity : -0.003 * execution.quantity;
@@ -19,6 +28,7 @@ function CalculateFees(execution: ExecutionInput) {
     const finraConsolidatedAuditTrailFee = -0.000072 * execution.quantity;
     return ecnFee + clearingFee + secTransactionFee + passThroughFee + finraFee + finraTradingActivityFee + finraConsolidatedAuditTrailFee;
 }
+
 function createExecutionId(input: ExecutionInput) {
     return createHash("md5")
         .update(input.date.toISOString() + input.ticker + input.action + input.price + input.quantity)
@@ -56,7 +66,7 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                 continue;
             }
 
-            const firstExecution: Execution = {
+            const firstExecution: Prisma.ExecutionUncheckedCreateWithoutTradeInput = {
                 ...firstExecutionInput,
                 pnl: 0,
                 scalingAction: ScalingAction.Initial,
@@ -66,17 +76,13 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                 fees: CalculateFees(firstExecutionInput),
                 amount: firstExecutionInput.price * firstExecutionInput.quantity,
                 executionHash: createExecutionId(firstExecutionInput),
-                tradeId: "",
-                id: "",
             };
 
-            const trade: TradeWithExecutions = {
-                id: "",
+            const trade: Prisma.TradeUncheckedCreateWithoutExecutionsInput & {executions : Prisma.ExecutionUncheckedCreateWithoutTradeInput[]}= {
                 account: account,
                 ticker: ticker,
-                type: TradeType.Stock,
-                notes: "",
-                startDate: isDate(firstExecution.date) ? firstExecution.date : new Date(),
+                type: firstExecution.type || TradeType.Stock,
+                startDate: new Date(firstExecution.date),
                 direction: firstExecution.action === TradeAction.Buy ? TradeDirection.Long : TradeDirection.Short,
                 volume: firstExecution.quantity,
                 buyVolume: firstExecution.action === TradeAction.Buy ? firstExecution.quantity : 0,
@@ -86,10 +92,11 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                 commission: firstExecution.commission,
                 fees: firstExecution.fees,
                 pnl: firstExecution.pnl,
-                endDate: null,
-                result: null,
-                executionTime: 0,
                 status: TradeStatus.Open,
+                notes: null,
+                endDate: null,
+                executionTime: null,
+                result: null,
                 executions: [],
             };
 
@@ -103,27 +110,25 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                     break;
                 }
 
-                    const execution: Execution = {
-                        ...executionInput,
-                        pnl: 0,
-                        scalingAction: ScalingAction.Initial,
-                        tradePosition: 0,
-                        avgPrice: 0,
+                const execution: Prisma.ExecutionUncheckedCreateWithoutTradeInput = {
+                    ...executionInput,
+                    pnl: 0,
+                    scalingAction: ScalingAction.Initial,
+                    tradePosition: 0,
+                    avgPrice: 0,
 
-                        commission: CalculateCommission(executionInput),
-                        fees: CalculateFees(executionInput),
-                        executionHash: createExecutionId(executionInput),
-                        amount: executionInput.price * executionInput.quantity,
-                        tradeId: "",
-                        id: "",
-                    };
+                    commission: CalculateCommission(executionInput),
+                    fees: CalculateFees(executionInput),
+                    executionHash: createExecutionId(executionInput),
+                    amount: executionInput.price * executionInput.quantity,
+                };
                 if (trade.direction === TradeDirection.Long) {
                     let executionQuantity = execution.quantity || 0;
-                    // Does execution closes the trade ? If so, adjust the quantity and add a new execution with the remaining quantity
+                    // Does execution close the trade? If so, adjust the quantity and add a new execution with the remaining quantity
                     // If the execution is a sell and it partially closes the trade, add a new execution with the remaining quantity and it will appear as a short trade
                     if (execution.action === TradeAction.Sell && trade.openPosition < execution.quantity) {
                         executionQuantity = trade.openPosition;
-                        const newExecutionInput = { ...executionInput };
+                        const newExecutionInput = {...executionInput};
                         newExecutionInput.quantity = executionInput.quantity - trade.openPosition;
                         executionInputs.unshift(newExecutionInput);
                     }
@@ -151,8 +156,8 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                         execution.action === TradeAction.Buy
                             ? ScalingAction.ScaleIn
                             : execution.price > trade.averagePrice
-                              ? ScalingAction.ProfitTaking
-                              : ScalingAction.StopLoss;
+                                ? ScalingAction.ProfitTaking
+                                : ScalingAction.StopLoss;
 
                     execution.tradePosition =
                         execution.action === TradeAction.Buy ? trade.openPosition + executionQuantity : trade.openPosition - executionQuantity;
@@ -165,7 +170,7 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                     // If the execution is a sell and it partially closes the trade, add a new execution with the remaining quantity and it will appear as a short trade
                     if (execution.action === TradeAction.Buy && trade.openPosition < execution.quantity) {
                         executionQuantity = trade.openPosition;
-                        const newExecutionInput = { ...executionInput };
+                        const newExecutionInput = {...executionInput};
                         newExecutionInput.quantity = executionInput.quantity - trade.openPosition;
                         executionInputs.unshift(newExecutionInput);
                     }
@@ -192,8 +197,8 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                         execution.action === TradeAction.Sell
                             ? ScalingAction.ScaleIn
                             : execution.price < trade.averagePrice
-                              ? ScalingAction.ProfitTaking
-                              : ScalingAction.StopLoss;
+                                ? ScalingAction.ProfitTaking
+                                : ScalingAction.StopLoss;
 
                     execution.tradePosition =
                         execution.action === TradeAction.Sell ? trade.openPosition + executionQuantity : trade.openPosition - executionQuantity;
@@ -203,7 +208,7 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
 
                 if (execution.tradePosition === 0) {
                     trade.endDate = execution.date;
-                    trade.executionTime = (trade.endDate.getTime() - trade.startDate.getTime()) / 1000;
+                    trade.executionTime = (new Date(trade.endDate).getTime() - new Date(trade.startDate).getTime()) / 1000;
                     trade.result = trade.pnl > 0 ? TradeResult.Win : trade.pnl < 0 ? TradeResult.Loss : TradeResult.BreakEven;
                     trade.status = TradeStatus.Closed;
                     trade.executions.push(execution);

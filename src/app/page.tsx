@@ -5,11 +5,13 @@ import { DataTable } from "./trades/data-table";
 import { columns } from "./trades/columns";
 import { TradeDetails } from "./trades/trade-detail";
 import { BasicCalendar } from "@/components/custom/basic-calendar";
-import { Trade, TradeResult } from "@prisma/client";
+import { TradeResult } from "@prisma/client";
 import { AdvancedCalendar, CalendarDayStats, CalendarWeekStats } from "@/components/custom/advanced-calendar/advanced-calendar";
 import { testTradeData } from "@/helpers/test-data";
 import { getWeek } from "date-fns";
 import  ThemeSwitch  from "@/components/custom/theme-switch";
+import db from "../db/db";
+import { TradeWithExecutions } from "@/db/types";
 
 const generateTradeWeeksForMonth = (dailyStats: Record<string, CalendarDayStats>) => {
   const weeklyStats: Record<number, CalendarWeekStats> = {};
@@ -34,7 +36,7 @@ const generateTradeWeeksForMonth = (dailyStats: Record<string, CalendarDayStats>
     return week;
   });
 };
-const generateTradeDaysForMonth = (trades: Trade[]) => {
+const generateTradeDaysForMonth = (trades: TradeWithExecutions[]) => {
   const tradeDays: Record<string, CalendarDayStats> = {};
 
   trades.forEach((trade) => {
@@ -58,10 +60,11 @@ const generateTradeDaysForMonth = (trades: Trade[]) => {
 };
 
 export default async function Home() {
-  const account = "TRIB14396";
-  const results = await TradeParser.parse<DasSchema>(testTradeData, DasTradeMapper, 2024, 10, 1);
-  const trades = await CreateTrades(results, account);
-  console.log(trades);
+  const trades = await db.trade.findMany({
+      include: {
+          executions: true,
+      },
+  });
 
   const dayStats: Record<string, CalendarDayStats> = generateTradeDaysForMonth(trades);
   const weekStats = generateTradeWeeksForMonth(dayStats);

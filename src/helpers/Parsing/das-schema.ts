@@ -1,6 +1,6 @@
 import {TradeAction} from "@prisma/client";
 import {fromZonedTime} from "date-fns-tz";
-import { ExecutionInput } from "../../../prisma/types";
+import { ExecutionInput } from "../../db/types";
 
 export interface DasSchema {
     Time: string;
@@ -21,7 +21,7 @@ export const DasTradeMapper: TradeMapper<DasSchema> = (input: DasSchema, year, m
     price: input.Price,
     date: setTime(input.Time, year, month, day),
     action: input.Side === "B" ? TradeAction.Buy : TradeAction.Sell,
-    addLiquidity: input.Liq === "+" ? true : false,
+    addLiquidity: input.Liq === "+",
     type: input.SecType === "Equity/ETF" ? "Stock" : null,
   } as ExecutionInput;
 };

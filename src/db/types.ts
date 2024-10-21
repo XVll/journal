@@ -26,6 +26,8 @@ export const ExecutionSchema = z.object({
     fees: z.number(),
     commission: z.number(),
     addLiquidity: z.boolean(),
+    executionHash: z.string(),
+    type: z.nativeEnum(TradeType),
 }) satisfies z.Schema<Execution>;
 export const ExecutionInputSchema = ExecutionSchema.omit({
     id: true,
@@ -41,7 +43,7 @@ export const ExecutionInputSchema = ExecutionSchema.omit({
 
 export const TradeSchema = z.object({
     id: z.string(),
-    account: z.string().nullable(),
+    account: z.string(),
     startDate: z.date(),
     endDate: z.date().nullable(),
     executionTime: z.number().nullable(),
@@ -62,7 +64,7 @@ export const TradeSchema = z.object({
 }) satisfies z.Schema<Trade>;
 
 
-export const ExecutionCreateSchema = ExecutionSchema.omit({ id: true }) satisfies z.Schema<Prisma.ExecutionCreateManyInput>;
+export const ExecutionCreateSchema = ExecutionSchema.omit({ id: true }) satisfies z.Schema<Prisma.ExecutionUncheckedCreateWithoutTradeInput>;
 
 export const TradeWithExecutionsSchema = TradeSchema.extend({
   executions: z.array(ExecutionSchema),

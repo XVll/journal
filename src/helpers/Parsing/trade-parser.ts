@@ -1,6 +1,6 @@
 import Papa, {ParseStepResult} from "papaparse";
 import {TradeMapper} from "@/helpers/Parsing/das-schema";
-import { ExecutionInput } from "../../../prisma/types";
+import { ExecutionInput } from "../../db/types";
 
 export const TradeParser = {
     parse<T>(data: string, mapper: TradeMapper<T>, year: number, month: number, day: number): Promise<ExecutionInput[]> {
