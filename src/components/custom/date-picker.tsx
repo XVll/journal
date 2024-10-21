@@ -1,3 +1,4 @@
+"use client"
 import React from 'react';
 import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -6,8 +7,17 @@ import { CalendarIcon } from '@radix-ui/react-icons';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 
-const DatePicker = () => {
+interface DatePickerProps {
+    onDateChanged: (date: Date) => void;
+}
+
+const DatePicker = ({ onDateChanged }: DatePickerProps) => {
     const [date, setDate] = React.useState<Date>();
+
+    const handleDateClicked = (date: Date) => {
+        setDate(date);
+        onDateChanged(date);
+    }
 
     return (
         <Popover>
@@ -18,7 +28,7 @@ const DatePicker = () => {
                 </Button>
             </PopoverTrigger>
             <PopoverContent className='w-auto p-0'>
-                <Calendar mode='single' selected={date} onSelect={setDate} initialFocus />
+                <Calendar mode='single' onDayClick={handleDateClicked} initialFocus />
             </PopoverContent>
         </Popover>
     );

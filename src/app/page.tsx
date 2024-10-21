@@ -1,17 +1,17 @@
-import { TradeParser } from "@/helpers/Parsing/trade-parser";
-import { DasSchema, DasTradeMapper } from "@/helpers/Parsing/das-schema";
-import CreateTrades from "@/helpers/create-trade";
+import { TradeParser } from "@/features/import/lib/Parsing/trade-parser";
+import { DasSchema, DasTradeMapper } from "@/features/import/lib/Parsing/das-schema";
+import CreateTrades from "@/features/import/lib/create-trade";
 import { DataTable } from "./trades/data-table";
 import { columns } from "./trades/columns";
 import { TradeDetails } from "./trades/trade-detail";
-import { BasicCalendar } from "@/components/custom/basic-calendar";
+import { BasicCalendar } from "@/features/calendar/components/basic-calendar";
 import { TradeResult } from "@prisma/client";
-import { AdvancedCalendar, CalendarDayStats, CalendarWeekStats } from "@/components/custom/advanced-calendar/advanced-calendar";
-import { testTradeData } from "@/helpers/test-data";
+import { AdvancedCalendar, CalendarDayStats, CalendarWeekStats } from "@/features/calendar/components/advanced-calendar/advanced-calendar";
+import { testTradeData } from "@/features/import/lib/test-data";
 import { getWeek } from "date-fns";
 import  ThemeSwitch  from "@/components/custom/theme-switch";
-import db from "../db/db";
-import { TradeWithExecutions } from "@/db/types";
+import db from "../lib/db/db";
+import { TradeWithExecutions } from "@/features/import/types";
 
 const generateTradeWeeksForMonth = (dailyStats: Record<string, CalendarDayStats>) => {
   const weeklyStats: Record<number, CalendarWeekStats> = {};
@@ -89,7 +89,7 @@ export default async function Home() {
         <AdvancedCalendar dayStats={dayStats} weekStats={weekStats} monthStats={monthStats} displayDate={new Date(2024, 9, 1)} />
       </div>
       <div className="grid grid-cols-3 gap-4">
-        {Array.from({ length: 3 }, (_, i) => new Date(new Date().setMonth(new Date().getMonth() - i))).map((month, i) => (
+        {Array.from({ length: 3 }, (_, i) => new Date(new Date().setMonth(new Date().getMonth() + i))).map((month, i) => (
           <BasicCalendar
             key={i}
             month={month}

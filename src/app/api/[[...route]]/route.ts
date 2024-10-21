@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { handle } from 'hono/vercel'
-import tradeRoutes from '@/app/server/trade-routes'
+import tradeRoutes from '@/features/import/api/trade-routes'
 
 const app = new Hono().basePath('/api')
 

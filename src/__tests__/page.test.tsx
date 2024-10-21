@@ -1,9 +1,9 @@
-import CreateTrades from "@/helpers/create-trade";
-import { DasSchema, DasTradeMapper } from "@/helpers/Parsing/das-schema";
-import { TradeParser } from "@/helpers/Parsing/trade-parser";
+import CreateTrades from "@/features/import/lib/create-trade";
+import { DasSchema, DasTradeMapper } from "@/features/import/lib/Parsing/das-schema";
+import { TradeParser } from "@/features/import/lib/Parsing/trade-parser";
 import { TradeResult, TradeStatus } from "@prisma/client";
 import { expect, test } from "vitest";
-import { CalculateTotalPnL } from "@/helpers/stat-functions/stat-functions.ts"; // Ensure this path is correct
+import { CalculateTotalPnL } from "@/features/calendar/stat-functions"; // Ensure this path is correct
 
 test("Splits closing trade to another trade with remaining quantity", async () => {
   const data =

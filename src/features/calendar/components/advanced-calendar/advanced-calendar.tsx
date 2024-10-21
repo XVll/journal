@@ -60,6 +60,7 @@ function AdvancedCalendar({
   displayDate?: Date;
 }) {
   const [selected] = React.useState<Date | undefined>(displayDate || startOfToday());
+  console.log(dayStats);
 
   return (
     <div className="flex">
@@ -117,7 +118,7 @@ function AdvancedCalendar({
       <div className="mt-[0.6rem] flex flex-col gap-[.2rem]">
         <MonthlyStats monthlyStats={monthStats} />
         {Object.keys(weekStats).map((weekNumber) => (
-          <WeeklyStats key={weekNumber} weeklyStats={weekStats[weekNumber]} />
+          <WeeklyStats key={weekNumber} weeklyStats={weekStats[Number(weekNumber)]} />
         ))}
       </div>
     </div>

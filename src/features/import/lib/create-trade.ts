@@ -1,4 +1,4 @@
-import { ExecutionInput } from "@/db/types";
+import { ExecutionInput } from "@/features/import/types";
 import {
     Execution,
     Prisma,

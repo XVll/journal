@@ -1,6 +1,6 @@
 import {TradeAction} from "@prisma/client";
 import {fromZonedTime} from "date-fns-tz";
-import { ExecutionInput } from "../../db/types";
+import { ExecutionInput } from "../../types";
 
 export interface DasSchema {
     Time: string;

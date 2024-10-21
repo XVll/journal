@@ -1,15 +1,7 @@
-import { Execution, Prisma, ScalingAction, Trade, TradeAction, TradeDirection, TradeResult, TradeStatus, TradeType } from "@prisma/client";
+import { TradeAction, ScalingAction, TradeType, Execution, TradeDirection, TradeStatus, TradeResult, Trade, Prisma } from "@prisma/client";
 import { z } from "zod";
+import { TradeWithExecutions } from "./types";
 
-// Types
-export type ExecutionInput = z.infer<typeof ExecutionInputSchema>;
-export type TradeWithExecutions = Prisma.TradeGetPayload<{
-  include: {
-    executions: true;
-  };
-}>;
-// Schemas
-// These are base schemas you can omit them if you want for create, update, delete operations
 export const ExecutionSchema = z.object({
     id: z.string(),
     date: z.date(),
