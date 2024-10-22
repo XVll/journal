@@ -29,9 +29,9 @@ function AdvancedCalendarBase({
               nav_button_previous: "absolute left-1",
               nav_button_next: "absolute right-1",
               table: "w-full border-collapse space-y-1",
-              head_row: "flex",
-                  head_cell: "text-muted-foreground rounded-md w-[8.20rem] font-normal text-[0.8rem]",
-              row: "flex mt-0 ",
+              head_row: "",
+              head_cell: "text-muted-foreground rounded-md w-[8.20rem] font-normal text-[0.8rem]",
+              row: "w-full mt-0 ",
               cell: cn(
                   "relative text-center focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-range-end)]:rounded-r-md",
                   "!hover:bg-background-bt3 focus:bg-accent/10",

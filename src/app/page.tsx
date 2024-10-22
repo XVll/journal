@@ -1,3 +1,4 @@
+"use client"
 import { TradeParser } from "@/features/import/lib/Parsing/trade-parser";
 import { DasSchema, DasTradeMapper } from "@/features/import/lib/Parsing/das-schema";
 import CreateTrades from "@/features/import/lib/create-trade";
@@ -12,6 +13,7 @@ import { getWeek, getWeekOfMonth, getWeeksInMonth, isSameMonth } from "date-fns"
 import  ThemeSwitch  from "@/components/custom/theme-switch";
 import db from "../lib/db/db";
 import { TradeWithExecutions } from "@/features/import/types";
+import { useGetTradesQuery } from "@/features/calendar/hooks/use-get-trades";
 
 const generateTradeWeeksForMonth = (dailyStats: Record<string, CalendarDayStats>, year:number, month:number) => {
   const weeklyStats: Record<number, CalendarWeekStats> = {};
@@ -39,13 +41,13 @@ const generateTradeDaysForMonth = (trades: TradeWithExecutions[]) => {
 
   trades.forEach((trade) => {
     if (!trade.result) return;
-    const dailyStats = tradeDays[trade.startDate.toLocaleDateString()];
+    const dailyStats = tradeDays[(new Date(trade.startDate)).toLocaleDateString()];
     if (dailyStats) {
       dailyStats.pnl += trade.pnl;
       dailyStats.trades += 1;
       dailyStats.result = dailyStats.pnl > 0 ? TradeResult.Win : dailyStats.pnl < 0 ? TradeResult.Loss : TradeResult.BreakEven;
     } else {
-      tradeDays[trade.startDate.toLocaleDateString()] = {
+      tradeDays[(new Date(trade.startDate)).toLocaleDateString()] = {
         date: trade.startDate,
         result: trade.result,
         pnl: trade.pnl,
@@ -57,13 +59,21 @@ const generateTradeDaysForMonth = (trades: TradeWithExecutions[]) => {
   return tradeDays;
 };
 
-export default async function Home() {
+export default function Home() {
   const displayDate = new Date(2024,9);
-  const trades = await db.trade.findMany({
-      include: {
-          executions: true,
-      },
-  });
+//  const trades = await db.trade.findMany({
+    //  include: {
+   //       executions: true,
+  //    },
+ // });
+ const { data:trades, isLoading } = useGetTradesQuery();
+ if (isLoading) {
+   return <div>Loading trades...</div>;
+    }
+    if (!trades) {
+      return <div>Failed to fetch trades</div>;
+    }
+
 
   const dayStats: Record<string, CalendarDayStats> = generateTradeDaysForMonth(trades);
   const weekStats = generateTradeWeeksForMonth(dayStats, displayDate.getFullYear(), displayDate.getMonth());
@@ -81,33 +91,33 @@ export default async function Home() {
 
 
   return (
-    <div className="text-xs flex flex-col gap-4 p-4">
-      <div className="flex justify-center align-middle border h-full w-full">
-        <AdvancedCalendar dayStats={dayStats} weekStats={weekStats} monthStats={monthStats} />
+      <div className="flex flex-col gap-4 p-4 text-xs">
+          <div className="flex h-full w-full justify-center border align-middle">
+              <AdvancedCalendar dayStats={dayStats} weekStats={weekStats} monthStats={monthStats} />
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+              {Array.from({ length: 3 }, (_, i) => new Date(new Date().setMonth(new Date().getMonth() + i))).map((month, i) => (
+                  <BasicCalendar
+                      key={i}
+                      month={month}
+                      selected={[]}
+                      modifiers={{
+                          winningDay: trades
+                              .filter((trade) => new Date(trade.startDate)?.getMonth() === month.getMonth() && trade.result === TradeResult.Win)
+                              .map((trade) => new Date(trade.startDate)),
+                          losingDay: trades
+                              .filter((trade) => new Date(trade.startDate)?.getMonth() === month.getMonth() && trade.result === TradeResult.Loss)
+                              .map((trade) => new Date(trade.startDate)),
+                      }}
+                      modifiersClassNames={{
+                          winningDay: "bg-background-green text-foreground-green",
+                          losingDay: "bg-background-red text-foreground-red",
+                      }}
+                  />
+              ))}
+          </div>
+          <DataTable columns={columns} data={trades} />
+          <TradeDetails trade={trades[0]} tradeId="" />
       </div>
-      <div className="grid grid-cols-3 gap-4">
-        {Array.from({ length: 3 }, (_, i) => new Date(new Date().setMonth(new Date().getMonth() + i))).map((month, i) => (
-          <BasicCalendar
-            key={i}
-            month={month}
-            selected={[]}
-            modifiers={{
-              winningDay: trades
-                .filter((trade) => trade.startDate?.getMonth() === month.getMonth() && trade.result === TradeResult.Win)
-                .map((trade) => trade.startDate),
-              losingDay: trades
-                .filter((trade) => trade.startDate?.getMonth() === month.getMonth() && trade.result === TradeResult.Loss)
-                .map((trade) => trade.startDate),
-            }}
-            modifiersClassNames={{
-              winningDay: "bg-background-green text-foreground-green",
-              losingDay: "bg-background-red text-foreground-red",
-            }}
-          />
-        ))}
-      </div>
-      <DataTable columns={columns} data={trades} />
-      <TradeDetails trade={trades[0]} tradeId="" />
-    </div>
   );
 }
