@@ -9,7 +9,7 @@ import { MonthlyStats } from "./monthly-stats";
 import { AdvancedCalendarBase } from "./advanced-calendar-base";
 
 export type CalendarDayStats = {
-  date: string;
+  date: Date;
   result: TradeResult;
   pnl: number;
   trades: number;
@@ -52,16 +52,24 @@ function AdvancedCalendar({
     dayStats,
     weekStats,
     monthStats,
+    onMonthChange,
 }: {
     dayStats: Record<string, CalendarDayStats>;
     weekStats: Record<number, CalendarWeekStats>;
     monthStats: CalendarMonthStats;
+    onMonthChange: (date: Date) => void;
 }) {
   const [selected, setSelected] = React.useState<Date | undefined>(undefined);
+
+  const handleMonthChange = (date: Date) => {
+    onMonthChange(date);
+    setSelected(date);
+  }
     return (
         <div className="m-2 flex p-1 pr-4">
             <AdvancedCalendarBase
                 selected={selected}
+                onMonthChange={handleMonthChange}
                 onSelect={setSelected}
                 modifiers={modifiers(dayStats)}
                 modifiersClassNames={{

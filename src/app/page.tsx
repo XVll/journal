@@ -1,3 +1,4 @@
+"use client"
 import { TradeParser } from "@/features/import/lib/Parsing/trade-parser";
 import { DasSchema, DasTradeMapper } from "@/features/import/lib/Parsing/das-schema";
 import CreateTrades from "@/features/import/lib/create-trade";
@@ -14,6 +15,7 @@ import db from "../lib/db/db";
 import { TradeWithExecutions } from "@/features/import/types";
 import { useGetTradesQuery } from "@/features/calendar/hooks/use-get-trades";
 import { getTradesQuery } from "@/features/calendar/actions/get-trades-query";
+import { useEffect, useState } from "react";
 
 const generateTradeWeeksForMonth = (dailyStats: Record<string, CalendarDayStats>, year:number, month:number) => {
   const weeklyStats: Record<number, CalendarWeekStats> = {};
@@ -59,10 +61,24 @@ const generateTradeDaysForMonth = (trades: TradeWithExecutions[]) => {
   return tradeDays;
 };
 
-export default async function Home() {
-  const displayDate = new Date(2024,9);
+export default function Home() {
+const [displayDate, setDisplayDate] = useState(new Date());
 
-const trades = await getTradesQuery();
+const { data:trades, isLoading,refetch } = useGetTradesQuery(displayDate.getFullYear(), displayDate.getMonth());
+console.log("Trades",trades);
+
+useEffect(() => {
+    refetch();
+} , [displayDate]);
+
+
+if (isLoading) {
+
+  return <div>Loading...</div>;
+}
+if (!trades) {
+    return <div>No trades</div>;
+}
 
   const dayStats: Record<string, CalendarDayStats> = generateTradeDaysForMonth(trades);
   const weekStats = generateTradeWeeksForMonth(dayStats, displayDate.getFullYear(), displayDate.getMonth());
@@ -82,7 +98,7 @@ const trades = await getTradesQuery();
   return (
       <div className="flex flex-col gap-4 p-4 text-xs">
           <div className="flex h-full w-full justify-center border align-middle">
-              <AdvancedCalendar dayStats={dayStats} weekStats={weekStats} monthStats={monthStats}/>
+              <AdvancedCalendar dayStats={dayStats} weekStats={weekStats} monthStats={monthStats} onMonthChange={setDisplayDate}/>
           </div>
           <div className="grid grid-cols-3 gap-4">
               {Array.from({ length: 3 }, (_, i) => new Date(new Date().setMonth(new Date().getMonth() + i))).map((month, i) => (
