@@ -9,5 +9,4 @@ export const CalculateTotalPnL = (trades: Trade[]) => {
 }
 
 export const CalculateTotalTrades = async () => {
-    return trades.length;
 }

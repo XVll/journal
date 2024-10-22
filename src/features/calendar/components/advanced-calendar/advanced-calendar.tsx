@@ -9,7 +9,7 @@ import { MonthlyStats } from "./monthly-stats";
 import { AdvancedCalendarBase } from "./advanced-calendar-base";
 
 export type CalendarDayStats = {
-  date: Date;
+  date: string;
   result: TradeResult;
   pnl: number;
   trades: number;

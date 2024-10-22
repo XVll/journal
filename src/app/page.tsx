@@ -1,4 +1,3 @@
-"use client"
 import { TradeParser } from "@/features/import/lib/Parsing/trade-parser";
 import { DasSchema, DasTradeMapper } from "@/features/import/lib/Parsing/das-schema";
 import CreateTrades from "@/features/import/lib/create-trade";
@@ -14,6 +13,7 @@ import  ThemeSwitch  from "@/components/custom/theme-switch";
 import db from "../lib/db/db";
 import { TradeWithExecutions } from "@/features/import/types";
 import { useGetTradesQuery } from "@/features/calendar/hooks/use-get-trades";
+import { getTradesQuery } from "@/features/calendar/actions/get-trades-query";
 
 const generateTradeWeeksForMonth = (dailyStats: Record<string, CalendarDayStats>, year:number, month:number) => {
   const weeklyStats: Record<number, CalendarWeekStats> = {};
@@ -59,21 +59,10 @@ const generateTradeDaysForMonth = (trades: TradeWithExecutions[]) => {
   return tradeDays;
 };
 
-export default function Home() {
+export default async function Home() {
   const displayDate = new Date(2024,9);
-//  const trades = await db.trade.findMany({
-    //  include: {
-   //       executions: true,
-  //    },
- // });
- const { data:trades, isLoading } = useGetTradesQuery();
- if (isLoading) {
-   return <div>Loading trades...</div>;
-    }
-    if (!trades) {
-      return <div>Failed to fetch trades</div>;
-    }
 
+const trades = await getTradesQuery();
 
   const dayStats: Record<string, CalendarDayStats> = generateTradeDaysForMonth(trades);
   const weekStats = generateTradeWeeksForMonth(dayStats, displayDate.getFullYear(), displayDate.getMonth());
@@ -93,7 +82,7 @@ export default function Home() {
   return (
       <div className="flex flex-col gap-4 p-4 text-xs">
           <div className="flex h-full w-full justify-center border align-middle">
-              <AdvancedCalendar dayStats={dayStats} weekStats={weekStats} monthStats={monthStats} />
+              <AdvancedCalendar dayStats={dayStats} weekStats={weekStats} monthStats={monthStats}/>
           </div>
           <div className="grid grid-cols-3 gap-4">
               {Array.from({ length: 3 }, (_, i) => new Date(new Date().setMonth(new Date().getMonth() + i))).map((month, i) => (
