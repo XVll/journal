@@ -84,7 +84,6 @@ export default async function Home() {
 
   return (
     <div className="text-xs flex flex-col gap-4 p-4">
-      <ThemeSwitch/>
       <div className="flex justify-center align-middle border h-full w-full">
         <AdvancedCalendar dayStats={dayStats} weekStats={weekStats} monthStats={monthStats} displayDate={new Date(2024, 9, 1)} />
       </div>

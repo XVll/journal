@@ -18,6 +18,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@radix-ui/react-popover
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
+import ThemeSwitch from "@/components/custom/theme-switch";
 
 const importSchema = z.object({
     account: z.string(),

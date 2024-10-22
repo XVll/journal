@@ -95,7 +95,7 @@ function AdvancedCalendar({
               : "[&:has([aria-selected])]:rounded-md"
           ),
           day: cn(buttonVariants({ variant: "ghost" }), "h-20 w-full text-xs  rounded-sm font-normal aria-selected:opacity-100 bg-background-bt1",
-            // "bg-[repeating-linear-gradient(45deg,var(--tw-gradient-stops))] from-background-bt2 from-[length:0_10px] to-background-bt1 to-[length:0_20px]",
+             "bg-[repeating-linear-gradient(45deg,var(--tw-gradient-stops))] from-background-bt2 from-[length:0_10px] to-background-bt1 to-[length:0_20px]",
         ),
           day_range_start: "day-range-start",
           day_range_end: "day-range-end",
