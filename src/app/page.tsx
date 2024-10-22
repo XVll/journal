@@ -8,32 +8,30 @@ import { BasicCalendar } from "@/features/calendar/components/basic-calendar";
 import { TradeResult } from "@prisma/client";
 import { AdvancedCalendar, CalendarDayStats, CalendarWeekStats } from "@/features/calendar/components/advanced-calendar/advanced-calendar";
 import { testTradeData } from "@/features/import/lib/test-data";
-import { getWeek } from "date-fns";
+import { getWeek, getWeekOfMonth, getWeeksInMonth, isSameMonth } from "date-fns";
 import  ThemeSwitch  from "@/components/custom/theme-switch";
 import db from "../lib/db/db";
 import { TradeWithExecutions } from "@/features/import/types";
 
-const generateTradeWeeksForMonth = (dailyStats: Record<string, CalendarDayStats>) => {
+const generateTradeWeeksForMonth = (dailyStats: Record<string, CalendarDayStats>, year:number, month:number) => {
   const weeklyStats: Record<number, CalendarWeekStats> = {};
+  const numberOfWeeks = getWeeksInMonth(new Date(year, month));
 
-  Object.values(dailyStats).forEach((dailyStat) => {
-    const weekNumber = getWeek(dailyStat.date);
-
-    if (!weeklyStats[weekNumber]) {
-      weeklyStats[weekNumber] = { weekNumber, pnl: 0, trades: 0, result: TradeResult.BreakEven };
-    }
-
-    weeklyStats[weekNumber].pnl += dailyStat.pnl;
-    weeklyStats[weekNumber].trades += dailyStat.trades;
+  Array.from({ length: numberOfWeeks }, (_, i) => i + 1).forEach((weekNumber) => {
+    weeklyStats[weekNumber] = { weekNumber, pnl: 0, trades: 0, result: TradeResult.BreakEven };
   });
 
-  const weeksInOrder = Object.keys(weeklyStats).sort((a, b) => Number(a) - Number(b));
+  Object.values(dailyStats).forEach((dailyStat) => {
+    const weekNumber = getWeekOfMonth(dailyStat.date);
+    if (isSameMonth(dailyStat.date, new Date(year, month))) {
+        weeklyStats[weekNumber].pnl += dailyStat.pnl;
+        weeklyStats[weekNumber].trades += dailyStat.trades;
+    }
+  });
 
-  return weeksInOrder.map((weekNumber, index) => {
-    const week = weeklyStats[Number(weekNumber)];
-    week.result = week.pnl > 0 ? TradeResult.Win : week.pnl < 0 ? TradeResult.Loss : TradeResult.BreakEven;
-    week.weekNumber = index + 1;
-    return week;
+  return Object.values(weeklyStats).map((stats, index) => {
+    stats.result = stats.pnl > 0 ? TradeResult.Win : stats.pnl < 0 ? TradeResult.Loss : TradeResult.BreakEven;
+    return stats;
   });
 };
 const generateTradeDaysForMonth = (trades: TradeWithExecutions[]) => {
@@ -60,6 +58,7 @@ const generateTradeDaysForMonth = (trades: TradeWithExecutions[]) => {
 };
 
 export default async function Home() {
+  const displayDate = new Date(2024,9);
   const trades = await db.trade.findMany({
       include: {
           executions: true,
@@ -67,9 +66,9 @@ export default async function Home() {
   });
 
   const dayStats: Record<string, CalendarDayStats> = generateTradeDaysForMonth(trades);
-  const weekStats = generateTradeWeeksForMonth(dayStats);
+  const weekStats = generateTradeWeeksForMonth(dayStats, displayDate.getFullYear(), displayDate.getMonth());
   const monthStats = {
-    month: 9,
+    month: displayDate.getMonth(),
     pnl: Object.values(dayStats).reduce((acc, day) => acc + day.pnl, 0),
     trades: Object.values(dayStats).reduce((acc, day) => acc + day.trades, 0),
     result:
@@ -80,12 +79,11 @@ export default async function Home() {
         : TradeResult.BreakEven,
   };
 
-  // All Executions
 
   return (
     <div className="text-xs flex flex-col gap-4 p-4">
       <div className="flex justify-center align-middle border h-full w-full">
-        <AdvancedCalendar dayStats={dayStats} weekStats={weekStats} monthStats={monthStats} displayDate={new Date(2024, 9, 1)} />
+        <AdvancedCalendar dayStats={dayStats} weekStats={weekStats} monthStats={monthStats} />
       </div>
       <div className="grid grid-cols-3 gap-4">
         {Array.from({ length: 3 }, (_, i) => new Date(new Date().setMonth(new Date().getMonth() + i))).map((month, i) => (

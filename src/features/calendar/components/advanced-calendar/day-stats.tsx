@@ -1,24 +1,24 @@
 import { TradeResult } from "@prisma/client";
 import { GiBullseye } from "react-icons/gi";
 
-import { CalendarDayStats } from "./advanced-calendar";
+import { CalendarDayStats, CalendarTarget } from "./advanced-calendar";
 import { DayContentProps } from "react-day-picker";
 import { FaShieldAlt } from "react-icons/fa";
 import { UTCDate } from "@date-fns/utc";
 
 
-export const DayStats = ({ date, tradeDays }: DayContentProps & {tradeDays: Record<string, CalendarDayStats>}) => {
+export const DayStats = ({ date, tradeDays, calendarTargets }: DayContentProps & {tradeDays: Record<string, CalendarDayStats>, calendarTargets:CalendarTarget}) => {
   return (
     <div className="flex w-full h-full">
       <div className="w-full flex flex-col">
         <div className="flex justify-between">
           <div className="text-left align-top font-bold text-sm">{date.getDate()}</div>
-          {tradeDays[new UTCDate(date.getFullYear(), date.getMonth(), date.getDate()).toLocaleDateString()]?.result === TradeResult.Win && (
+          {tradeDays[new UTCDate(date.getFullYear(), date.getMonth(), date.getDate()).toLocaleDateString()]?.pnl >= calendarTargets.dailyProfit && (
             <span className="flex items-center">
               <GiBullseye className="text-foreground-green" />
             </span>
           )}
-          {tradeDays[new UTCDate(date.getFullYear(), date.getMonth(), date.getDate()).toLocaleDateString()]?.result === TradeResult.Loss && (
+          {tradeDays[new UTCDate(date.getFullYear(), date.getMonth(), date.getDate()).toLocaleDateString()]?.pnl <= calendarTargets.dailyMaxLoss && (
             <span className="flex items-center">
               <FaShieldAlt className="text-foreground-red" />
             </span>
