@@ -30,7 +30,7 @@ const setTime = (time: string, year:number, month:number, day:number) => {
   // console.log(fromZonedTime(new Date(2024, 0, 1, 4, 30, 0), "America/New_York").toLocaleString()); // This is like setting time with US local time
 
   const [hours, min, sec] = time.split(":");
-  const d = new Date(year, month - 1, day, parseInt(hours), parseInt(min), parseInt(sec));
+  const d = new Date(year, month , day, parseInt(hours), parseInt(min), parseInt(sec));
   return fromZonedTime(d, "America/New_York");
 }
 

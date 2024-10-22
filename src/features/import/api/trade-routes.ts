@@ -21,7 +21,7 @@ const app = new Hono().post("/import", async (c) => {
     });
 
     // Delete all trades
-    await db.trade.deleteMany({});
+    // await db.trade.deleteMany({});
     await db.$transaction(transactions);
     return c.json({});
 });
