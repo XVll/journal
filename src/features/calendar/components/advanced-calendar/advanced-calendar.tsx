@@ -60,7 +60,6 @@ function AdvancedCalendar({
   displayDate?: Date;
 }) {
   const [selected] = React.useState<Date | undefined>(displayDate || startOfToday());
-  console.log(dayStats);
 
   return (
     <div className="flex">
@@ -95,7 +94,7 @@ function AdvancedCalendar({
               : "[&:has([aria-selected])]:rounded-md"
           ),
           day: cn(buttonVariants({ variant: "ghost" }), "h-20 w-full text-xs  rounded-sm font-normal aria-selected:opacity-100 bg-background-bt1",
-             "bg-[repeating-linear-gradient(45deg,var(--tw-gradient-stops))] from-background-bt2 from-[length:0_10px] to-background-bt1 to-[length:0_20px]",
+            // "bg-[repeating-linear-gradient(45deg,var(--tw-gradient-stops))] from-background-bt2 from-[length:0_10px] to-background-bt1 to-[length:0_20px]",
         ),
           day_range_start: "day-range-start",
           day_range_end: "day-range-end",
@@ -118,7 +117,7 @@ function AdvancedCalendar({
       <div className="mt-[0.6rem] flex flex-col gap-[.2rem]">
         <MonthlyStats monthlyStats={monthStats} />
         {Object.keys(weekStats).map((weekNumber) => (
-          <WeeklyStats key={weekNumber} weeklyStats={weekStats[Number(weekNumber)]} />
+          <WeeklyStats key={weekNumber} weeklyStats={weekStats[weekNumber]} />
         ))}
       </div>
     </div>
