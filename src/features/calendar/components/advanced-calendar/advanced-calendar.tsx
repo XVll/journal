@@ -7,6 +7,8 @@ import { WeeklyStats } from "./weekly-stats";
 import { DayStats } from "./day-stats";
 import { MonthlyStats } from "./monthly-stats";
 import { AdvancedCalendarBase } from "./advanced-calendar-base";
+import { FaSpinner } from "react-icons/fa";
+import DatePicker from "@/components/custom/date-picker";
 
 export type CalendarDayStats = {
   date: Date;
@@ -53,32 +55,48 @@ function AdvancedCalendar({
     weekStats,
     monthStats,
     onMonthChange,
+    isLoading
 }: {
     dayStats: Record<string, CalendarDayStats>;
     weekStats: Record<number, CalendarWeekStats>;
     monthStats: CalendarMonthStats;
-    onMonthChange: (date: Date) => void;
+    onMonthChange?: (date: Date) => void;
+    isLoading:boolean
 }) {
-  const [selected, setSelected] = React.useState<Date | undefined>(undefined);
 
   const handleMonthChange = (date: Date) => {
-    onMonthChange(date);
-    setSelected(date);
+    onMonthChange?.(date);
   }
     return (
-        <div className="m-2 flex p-1 pr-4">
+        <div className="relative m-2 flex p-1 pr-4">
             <AdvancedCalendarBase
-                selected={selected}
                 onMonthChange={handleMonthChange}
-                onSelect={setSelected}
                 modifiers={modifiers(dayStats)}
                 modifiersClassNames={{
                     winningDay: "!bg-background-green !text-foreground-green hover:!bg-foreground-green/10",
                     losingDay: "!bg-background-red !text-foreground-red hover:!bg-foreground-red/10",
                     breakEvenDay: "!bg-background-b0 !text-foreground-f1 hover:!bg-foreground-f1/10",
-                    weekend: "bg-[repeating-linear-gradient(45deg,var(--tw-gradient-stops))] from-background-b2 from-[length:0_10px] to-background-b1 to-[length:0_20px]",
+                    weekend:
+                        "bg-[repeating-linear-gradient(45deg,var(--tw-gradient-stops))] from-background-b2 from-[length:0_10px] to-background-b1 to-[length:0_20px]",
                 }}
-                components={{ DayContent: (props: DayContentProps) => <DayStats {...props} tradeDays={dayStats} calendarTargets={calendarTargets} /> }}
+                components={{ 
+                  DayContent: (props: DayContentProps) => <DayStats {...props} tradeDays={dayStats} calendarTargets={calendarTargets} />, 
+                  CaptionLabel:( date ) => {
+                    return (
+                        <div>
+                            {isLoading ? (
+                                <div className="flex h-5 items-center justify-center">
+                                    <FaSpinner className="animate-spin" size={"1rem"} />
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="text-sm">{date.displayMonth.toLocaleString("default", { month: "long", year: "numeric" })}</div>
+                                </>
+                            )}
+                        </div>
+                    );
+                }
+                }}
             />
             <div className="flex flex-col gap-[2px]">
                 <MonthlyStats monthlyStats={monthStats} />

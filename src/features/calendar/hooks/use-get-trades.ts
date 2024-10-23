@@ -6,15 +6,27 @@ import { z } from "zod";
 import { TradeWithExecutionsSchema } from "@/features/import/schemas";
 import superjson from "superjson";
 import { TradeWithExecutions } from "@/features/import/types";
+import { useFilterStore } from "./use-filters";
+import qs from "qs";
 
-export const useGetTradesQuery = (year:number, month:number) => {
-    return useQuery({
-        queryKey: ["trades-get"],
+export const useGetTradesQuery = (date:Date) => {
+
+    const filters = useFilterStore((state) => state);
+    const query = qs.stringify({
+        dateRange: filters.dateRange,
+        pnlType: filters.pnlType,
+        pnlRange: filters.pnlRange,
+        selectedCalendarDate: date
+    });
+
+    type ResponseType = InferResponseType<typeof rpc.api.trade.trades.$get>;
+    return useQuery<TradeWithExecutions[], Error>({
+        staleTime: 1000 * 60 * 5,
+        queryKey: ["trades-get", date],
         queryFn: async () => {
             const res = await rpc.api.trade.trades.$get({
                 query: {
-                    year,
-                    month,
+                    query,
                 },
             });
 
