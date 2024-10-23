@@ -1,10 +1,38 @@
 import { AdvancedCalendar } from "@/features/calendar/components/advanced-calendar/advanced-calendar";
+import PnlWidget from "@/features/widgets/pnl/pnl-widget";
+import { ProfitFactorWidget } from "@/features/widgets/profit-factor/profit-factor-widget";
 
 
 export default function Dashboard() {
     return (
-        <div className="">
-            <AdvancedCalendar />
+        <div className="pt-2">
+            <div className="grid grid-cols-4 grid-rows-4 gap-4">
+                <div className="col-span-1 row-span-1">
+                    <PnlWidget />
+                </div>
+                <div className="col-span-1 row-span-1">
+                    <ProfitFactorWidget />
+                </div>
+                <div className="col-span-1 row-span-1">
+                    <PnlWidget />
+                </div>
+                <div className="col-span-1 row-span-1">
+                    <PnlWidget />
+                </div>
+                <div className="col-span-1 row-span-2"></div>
+
+                <div className="col-span-3 col-start-2 row-span-2">
+                    <AdvancedCalendar />
+                </div>
+                {
+                    // Profit Factor
+                    // Trade Win % : A widget that shows percentage of winning trades and number of trades
+                    // Streaks : A widget that shows the longest winning and losing streaks for both trades and days
+                    // Fx Score : A widget that shows the overall performance of the trader using a proprietary algorithm
+                    // Using Win/Loss ratio, Profit Factor, Streaks, and other metrics
+                    // Daily Cumulative P&L : A widget that shows the daily cumulative profit or loss
+                }
+            </div>
             {/*
             
             <div className="grid grid-cols-3 gap-4">

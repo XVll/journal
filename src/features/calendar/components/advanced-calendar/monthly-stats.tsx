@@ -6,7 +6,7 @@ interface MonthlyStatsProps {
 
 export const MonthlyStats = ({monthlyStats}:MonthlyStatsProps ) => {
   return (
-    <div className=" w-32 mt-3 mb-[1px] ">
+    <div className=" mb-[1px] ">
         <div className={cn("h-full bg-accent py-1 px-2 whitespace-nowrap rounded-sm",
           monthlyStats.pnl > 0 ? "text-foreground-green bg-background-green" : monthlyStats.pnl < 0 ? "text-foreground-red bg-background-red" : "text-foreground-f1 bg-background-b0"
         )}>

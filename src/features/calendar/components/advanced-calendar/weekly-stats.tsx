@@ -6,7 +6,7 @@ interface WeeklyStatsProps {
 
 export const WeeklyStats = ({weeklyStats}:WeeklyStatsProps ) => {
   return (
-      <div className="h-20 w-32">
+      <div className="h-20">
           <div
               className={cn( "h-full whitespace-nowrap rounded-sm bg-accent px-2",
                   weeklyStats.pnl > 0

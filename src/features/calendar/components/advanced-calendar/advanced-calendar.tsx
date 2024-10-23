@@ -62,14 +62,15 @@ function AdvancedCalendar() {
     const monthStats = generateMonthlyCalendarStats(dayStats, selectedCalendarDate);
 
     return (
-        <div className="relative m-2 flex p-1 pr-4">
+        <div className="relative grid grid-cols-8">
             <AdvancedCalendarBase
+            className="col-span-7"
                 onMonthChange={setSelectedCalendarDate}
                 modifiers={modifiers(dayStats)}
                 modifiersClassNames={{
-                    winningDay: "!bg-background-green !text-foreground-green hover:!bg-foreground-green/10",
-                    losingDay: "!bg-background-red !text-foreground-red hover:!bg-foreground-red/10",
-                    breakEvenDay: "!bg-background-b0 !text-foreground-f1 hover:!bg-foreground-f1/10",
+                    winningDay: "!bg-background-green !text-foreground-green hover:!bg-foreground-green/20",
+                    losingDay: "!bg-background-red !text-foreground-red hover:!bg-foreground-red/20",
+                    breakEvenDay: "!bg-background-b1 !text-foreground-f1 hover:!bg-foreground-f1/20",
                     weekend:
                         "bg-[repeating-linear-gradient(45deg,var(--tw-gradient-stops))] from-background-b2 from-[length:0_10px] to-background-b1 to-[length:0_20px]",
                 }}
@@ -102,7 +103,7 @@ function AdvancedCalendar() {
                     },
                 }}
             />
-            <div className="flex flex-col gap-[2px]">
+            <div className="flex flex-col gap-[2px] ml-2">
                 <MonthlyStats monthlyStats={monthStats} />
                 {Object.keys(weekStats).map((weekNumber) => (
                     <WeeklyStats key={weekNumber} weeklyStats={weekStats[Number(weekNumber)]} />
