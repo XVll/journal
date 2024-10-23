@@ -10,18 +10,20 @@ export default function Dashboard() {
                 <div className="col-span-1 row-span-1">
                     <PnlWidget />
                 </div>
-                <div className="col-span-1 row-span-1">
+                <div className="col-span-1 row-span-2">
+                    <ProfitFactorWidget />
+                </div>
+                <div className="col-span-1 row-span-2">
+                    <ProfitFactorWidget />
+                </div>
+                <div className="col-span-1 row-span-2">
                     <ProfitFactorWidget />
                 </div>
                 <div className="col-span-1 row-span-1">
                     <PnlWidget />
                 </div>
-                <div className="col-span-1 row-span-1">
-                    <PnlWidget />
-                </div>
-                <div className="col-span-1 row-span-2"></div>
 
-                <div className="col-span-3 col-start-2 row-span-2">
+                <div className="col-span-4 col-start-1 row-span-2">
                     <AdvancedCalendar />
                 </div>
                 {

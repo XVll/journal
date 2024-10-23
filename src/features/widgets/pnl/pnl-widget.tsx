@@ -2,8 +2,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 const PnlWidget = () => {
     return (
-        <div>
-            <Card>
+        <div className="h-full flex w-full ">
+            <Card className="w-full">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">PnL</CardTitle>
                     <svg
