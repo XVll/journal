@@ -21,9 +21,7 @@ export default function RootLayout({children,}: Readonly<{
             <body className={karla.className}>
                 <QueryProvider>
                     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="fx-theme">
-                        <MotionProvider>
-                            <main>{children}</main>
-                        </MotionProvider>
+                        <MotionProvider>{children}</MotionProvider>
                         <Sonner />
                         <Toaster />
                     </ThemeProvider>

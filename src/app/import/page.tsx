@@ -47,7 +47,7 @@ const Page = () => {
             ),
         });
         //for (let i = 1; i < 28; i++){
-            await mutateAsync({ account:data.account, tradeData: testTradeData , year:data.date.getFullYear(), month:data.date.getMonth(), day:data.date.getDate() });
+            await mutateAsync({ account:data.account, tradeData: data.tradeData , year:data.date.getFullYear(), month:data.date.getMonth(), day:data.date.getDate() });
        // }
     };
 

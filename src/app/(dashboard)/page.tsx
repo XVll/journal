@@ -1,14 +1,10 @@
 import { AdvancedCalendar } from "@/features/calendar/components/advanced-calendar/advanced-calendar";
 
 
-export default function Home() {
-
-
+export default function Dashboard() {
     return (
-        <div className="flex flex-col gap-4 p-4 text-xs">
-            <div className="relative flex h-full w-full justify-center align-middle">
-                <AdvancedCalendar/>
-            </div>
+        <div className="">
+            <AdvancedCalendar />
             {/*
             
             <div className="grid grid-cols-3 gap-4">
