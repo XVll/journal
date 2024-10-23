@@ -5,10 +5,10 @@ import { TradeParser } from "@/features/import/lib/Parsing/trade-parser";
 import { Hono } from "hono";
 import { TradeStatus, TradeType } from "@prisma/client";
 import superjson from "superjson";
-import { FilterSchema, FilterState } from "@/features/calendar/hooks/use-filters";
-import qs from "qs";
+import { FilterSchema, FilterState } from "@/features/filter/hooks/use-filters";
 import { z } from "zod";
 import { endOfMonth, startOfMonth } from "date-fns";
+import qs from "qs";
 const app = new Hono()
     .post("/import", async (c) => {
         const { tradeData, account, year, month, day } = await c.req.json<{ tradeData: string; account: string; year: number; month: number; day: number }>();
@@ -37,7 +37,6 @@ const app = new Hono()
 
         const startDate = startOfMonth(filters?.selectedCalendarDate || new Date());
         const endDate = endOfMonth(filters?.selectedCalendarDate || new Date());
-        console.log(startDate, endDate);
 
         const trades = await db.trade.findMany({
             where: {
@@ -61,9 +60,6 @@ const app = new Hono()
             // result: { not: "BreakEven" },
             // executionTime: { not: null },
             //},
-            include: {
-                executions: true,
-            },
         });
         const resp = superjson.serialize(trades);
         return c.json(resp);

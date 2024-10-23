@@ -5,6 +5,8 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import { QueryProvider } from "@/providers/query-provider";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
+import MotionProvider from "@/providers/motion-provider";
+import { karla } from "@/components/fonts";
 
 export const metadata: Metadata = {
     title: "Journal",
@@ -16,10 +18,12 @@ export default function RootLayout({children,}: Readonly<{
 }>) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className={`antialiased`}>
+            <body className={karla.className}>
                 <QueryProvider>
                     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="fx-theme">
-                        <main>{children}</main>
+                        <MotionProvider>
+                            <main>{children}</main>
+                        </MotionProvider>
                         <Sonner />
                         <Toaster />
                     </ThemeProvider>

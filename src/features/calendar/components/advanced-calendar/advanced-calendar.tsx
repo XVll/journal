@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { DayContentProps, DayPicker } from "react-day-picker";
-import { TradeResult } from "@prisma/client";
+import { Trade, TradeResult } from "@prisma/client";
 import { isWeekend} from "date-fns";
 import { WeeklyStats } from "./weekly-stats";
 import { DayStats } from "./day-stats";
@@ -9,6 +9,9 @@ import { MonthlyStats } from "./monthly-stats";
 import { AdvancedCalendarBase } from "./advanced-calendar-base";
 import { FaSpinner } from "react-icons/fa";
 import DatePicker from "@/components/custom/date-picker";
+import { AnimatePresence, m } from "framer-motion";
+import { useGetCalendarDataQuery } from "../../hooks/use-get-calendar-data-query";
+import { generateDailyCalendarStats, generateWeeklyCalendarStats, generateMonthlyCalendarStats } from "../../transformers/transformers";
 
 export type CalendarDayStats = {
   date: Date;
@@ -50,27 +53,18 @@ const modifiers = (tradeDays: Record<string, CalendarDayStats>) => {
   };
 };
 
-function AdvancedCalendar({
-    dayStats,
-    weekStats,
-    monthStats,
-    onMonthChange,
-    isLoading
-}: {
-    dayStats: Record<string, CalendarDayStats>;
-    weekStats: Record<number, CalendarWeekStats>;
-    monthStats: CalendarMonthStats;
-    onMonthChange?: (date: Date) => void;
-    isLoading:boolean
-}) {
+function AdvancedCalendar() {
+    const [selectedCalendarDate, setSelectedCalendarDate] = React.useState(new Date());
+    const { data: trades, isLoading } = useGetCalendarDataQuery(selectedCalendarDate);
 
-  const handleMonthChange = (date: Date) => {
-    onMonthChange?.(date);
-  }
+    const dayStats = generateDailyCalendarStats(trades, selectedCalendarDate);
+    const weekStats = generateWeeklyCalendarStats(dayStats, selectedCalendarDate);
+    const monthStats = generateMonthlyCalendarStats(dayStats, selectedCalendarDate);
+
     return (
         <div className="relative m-2 flex p-1 pr-4">
             <AdvancedCalendarBase
-                onMonthChange={handleMonthChange}
+                onMonthChange={setSelectedCalendarDate}
                 modifiers={modifiers(dayStats)}
                 modifiersClassNames={{
                     winningDay: "!bg-background-green !text-foreground-green hover:!bg-foreground-green/10",
@@ -79,23 +73,33 @@ function AdvancedCalendar({
                     weekend:
                         "bg-[repeating-linear-gradient(45deg,var(--tw-gradient-stops))] from-background-b2 from-[length:0_10px] to-background-b1 to-[length:0_20px]",
                 }}
-                components={{ 
-                  DayContent: (props: DayContentProps) => <DayStats {...props} tradeDays={dayStats} calendarTargets={calendarTargets} />, 
-                  CaptionLabel:( date ) => {
-                    return (
-                        <div>
-                            {isLoading ? (
-                                <div className="flex h-5 items-center justify-center">
-                                    <FaSpinner className="animate-spin" size={"1rem"} />
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="text-sm">{date.displayMonth.toLocaleString("default", { month: "long", year: "numeric" })}</div>
-                                </>
-                            )}
-                        </div>
-                    );
-                }
+                components={{
+                    DayContent: (props: DayContentProps) => <DayStats {...props} tradeDays={dayStats} calendarTargets={calendarTargets} />,
+                    CaptionLabel: (date) => {
+                        return (
+                            <div>
+                                <AnimatePresence>
+                                    {isLoading ? (
+                                        <m.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ duration: 0.5 }}
+                                            className="flex h-5 items-center justify-center"
+                                        >
+                                            <FaSpinner className="animate-spin text-foreground-f2" size={"1rem"} />
+                                        </m.div>
+                                    ) : (
+                                        <>
+                                            <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
+                                                <div className="text-sm">{date.displayMonth.toLocaleString("default", { month: "long", year: "numeric" })}</div>
+                                            </m.div>
+                                        </>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        );
+                    },
                 }}
             />
             <div className="flex flex-col gap-[2px]">

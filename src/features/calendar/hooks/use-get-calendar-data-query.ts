@@ -6,10 +6,11 @@ import { z } from "zod";
 import { TradeWithExecutionsSchema } from "@/features/import/schemas";
 import superjson from "superjson";
 import { TradeWithExecutions } from "@/features/import/types";
-import { useFilterStore } from "./use-filters";
+import { useFilterStore } from "../../filter/hooks/use-filters";
 import qs from "qs";
+import { Trade } from "@prisma/client";
 
-export const useGetTradesQuery = (date:Date) => {
+export const useGetCalendarDataQuery = (date:Date) => {
 
     const filters = useFilterStore((state) => state);
     const query = qs.stringify({
@@ -19,8 +20,7 @@ export const useGetTradesQuery = (date:Date) => {
         selectedCalendarDate: date
     });
 
-    type ResponseType = InferResponseType<typeof rpc.api.trade.trades.$get>;
-    return useQuery<TradeWithExecutions[], Error>({
+    return useQuery<Trade[], Error>({
         staleTime: 1000 * 60 * 5,
         queryKey: ["trades-get", date],
         queryFn: async () => {
@@ -35,7 +35,7 @@ export const useGetTradesQuery = (date:Date) => {
             }
 
             const result = await res.json();
-            return superjson.deserialize<TradeWithExecutions[]>(result);
+            return superjson.deserialize<Trade[]>(result);
         },
     });
 };
