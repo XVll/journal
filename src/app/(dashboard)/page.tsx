@@ -1,31 +1,32 @@
 import { AdvancedCalendar } from "@/features/calendar/components/advanced-calendar/advanced-calendar";
 import PnlWidget from "@/features/widgets/pnl/pnl-widget";
 import { ProfitFactorWidget } from "@/features/widgets/profit-factor/profit-factor-widget";
+import { WinLossWidget } from "@/features/widgets/win-loss-widget";
 
 
 export default function Dashboard() {
     return (
         <div className="pt-2">
-            <div className="grid grid-cols-4 grid-rows-4 gap-4">
+            <div className="grid grid-cols-5 grid-rows-6 gap-4">
                 <div className="col-span-1 row-span-1">
                     <PnlWidget />
                 </div>
-                <div className="col-span-1 row-span-2">
+                <div className="col-span-1 row-span-1">
                     <ProfitFactorWidget />
                 </div>
-                <div className="col-span-1 row-span-2">
-                    <ProfitFactorWidget />
+                <div className="col-span-3 row-span-1">
+                    <AdvancedCalendar />
                 </div>
-                <div className="col-span-1 row-span-2">
+                <div className="col-span-1 row-span-1">
+                    <WinLossWidget />
+                </div>
+                <div className="col-span-1 row-span-1">
                     <ProfitFactorWidget />
                 </div>
                 <div className="col-span-1 row-span-1">
                     <PnlWidget />
                 </div>
 
-                <div className="col-span-4 col-start-1 row-span-2">
-                    <AdvancedCalendar />
-                </div>
                 {
                     // Profit Factor
                     // Trade Win % : A widget that shows percentage of winning trades and number of trades

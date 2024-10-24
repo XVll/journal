@@ -62,7 +62,7 @@ function AdvancedCalendar() {
     const monthStats = generateMonthlyCalendarStats(dayStats, selectedCalendarDate);
 
     return (
-        <div className="relative grid grid-cols-8">
+        <div className="relative grid grid-cols-8 border p-2 rounded-xl">
             <AdvancedCalendarBase
             className="col-span-7"
                 onMonthChange={setSelectedCalendarDate}
