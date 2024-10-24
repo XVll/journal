@@ -25,6 +25,6 @@
     "noUnusedParameters": false,
 
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/features/widgets/api/profit-factor"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/features"],
   "exclude": ["node_modules"]
 }
