@@ -1,11 +1,13 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
-const PnlWidget = () => {
+const AvgWinLossWidget = () => {
     return (
         <div className="h-full flex w-full ">
             <Card className="w-full">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">PnL</CardTitle>
+                    <CardTitle className="text-sm font-medium">Avg Win/Loss</CardTitle>
+                    <CardDescription className="text-xs text-muted-foreground">Average Win/Loss per trade</CardDescription>
+                    <CardDescription className="text-xs text-muted-foreground">Total Win PnL / Total Trades</CardDescription>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
@@ -31,4 +33,4 @@ const PnlWidget = () => {
     );
 }
 
-export default PnlWidget;
+export default AvgWinLossWidget;

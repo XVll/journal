@@ -1,29 +1,47 @@
 import { AdvancedCalendar } from "@/features/calendar/components/advanced-calendar/advanced-calendar";
-import PnlWidget from "@/features/widgets/pnl/pnl-widget";
-import { ProfitFactorWidget } from "@/features/widgets/profit-factor/profit-factor-widget";
+import ExpectancyWidget from "@/features/widgets/components/expectancy";
+import PnlWidget from "@/features/widgets/components/pnl-widget";
+import { ProfitFactorWidget } from "@/features/widgets/components/profit-factor-widget";
+import { WinLossWidget } from "@/features/widgets/components/win-loss";
 
+const totalPnl = 33.44;
+const totalTradeCount = 33;
+const winRate = 50;
+const looseRate = 50;
+const avgWin = 23.44;
+const avgLoss = 63.44;
+const expectancy = (avgWin * winRate - avgLoss * looseRate)/100
 
 export default function Dashboard() {
     return (
         <div className="pt-2">
-            <div className="grid grid-cols-4 grid-rows-4 gap-4">
+            <div className="grid grid-cols-4 gap-4">
                 <div className="col-span-1 row-span-1">
-                    <PnlWidget />
-                </div>
-                <div className="col-span-1 row-span-2">
-                    <ProfitFactorWidget />
-                </div>
-                <div className="col-span-1 row-span-2">
-                    <ProfitFactorWidget />
-                </div>
-                <div className="col-span-1 row-span-2">
-                    <ProfitFactorWidget />
+                    <PnlWidget pnl={totalPnl} tradeCount={totalTradeCount}/>
                 </div>
                 <div className="col-span-1 row-span-1">
-                    <PnlWidget />
+                    <ExpectancyWidget expectancy={expectancy}/>
+                </div>
+                <div className="col-span-1 row-span-1">
+                    <PnlWidget pnl={33.44} tradeCount={33}/>
+                </div>
+                <div className="col-span-1 row-span-1">
+                    <PnlWidget pnl={33.44} tradeCount={33}/>
+                </div>
+                <div className="col-span-1 row-span-2">
+                    <WinLossWidget />
+                </div>
+                <div className="col-span-1 row-span-2">
+                    <ProfitFactorWidget />
+                </div>
+                <div className="col-span-1 row-span-2">
+                    <ProfitFactorWidget />
+                </div>
+                <div className="col-span-1 row-span-2">
+                    <ProfitFactorWidget />
                 </div>
 
-                <div className="col-span-4 col-start-1 row-span-2">
+                <div className="col-span-4 col-start-1 row-span-4">
                     <AdvancedCalendar />
                 </div>
                 {
