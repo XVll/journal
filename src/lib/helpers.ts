@@ -4,7 +4,6 @@ export const Currency = (input:number | string | undefined | null) => {
     if (typeof input === "string") {
         input = Number(input);
     }
-    console.log(input)
     return new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",

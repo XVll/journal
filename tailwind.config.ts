@@ -72,7 +72,7 @@ const config: Config = {
   				foreground: 'hsl(var(--f1))'
   			},
   			popover: {
-  				DEFAULT: 'hsla(var(--bt1))',
+  				DEFAULT: 'hsla(var(--b2))',
   				foreground: 'hsl(var(--f1))'
   			},
   			card: {

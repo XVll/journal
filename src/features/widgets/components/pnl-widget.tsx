@@ -15,7 +15,7 @@ const PnlWidget = ({ pnl, tradeCount }: PnlWidgetProps) => {
                     <CardTitle className="text-sm font-medium">Total PnL</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className={cn("text-2xl font-bold", pnl > 0 ? "text-foreground-green" : "text-foreground-red")}>{Currency(pnl)} <span className="text-xs text-muted-foreground">from {tradeCount} trades</span></div>
+                    <div className={cn("text-2xl font-bold", pnl > 0 ? "text-foreground-green" : "text-foreground-red")}>{Currency(pnl)} <span className="text-xs text-muted-foreground"> {tradeCount} trades</span></div>
                 </CardContent>
             </Card>
         </div>

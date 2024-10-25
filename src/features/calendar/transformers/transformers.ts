@@ -19,7 +19,6 @@ export const generateWeeklyCalendarStats = (dailyStats: Record<string, CalendarD
             weeklyStats[weekNumber].trades += dailyStat.trades;
         }
     });
-    console.log(year, month, numberOfWeeks);
 
     return Object.values(weeklyStats).map((stats, index) => {
         stats.result = stats.pnl > 0 ? TradeResult.Win : stats.pnl < 0 ? TradeResult.Loss : TradeResult.BreakEven;
