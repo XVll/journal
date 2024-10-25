@@ -1,18 +1,8 @@
 import { z } from 'zod';
 import {create } from 'zustand';
 import {devtools} from 'zustand/middleware';
+import { DateRange, PnLRange, PnlType } from '../types';
 
-enum PnlType {
-    Gross, Net
-}
-interface PnLRange{
-    min : number | undefined;
-    max : number | undefined;
-}
-interface DateRange{
-    start : Date | undefined;
-    end : Date | undefined;
-}
 const FilterSchema = z.object({
     dateRange: z
         .object({

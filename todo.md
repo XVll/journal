@@ -45,14 +45,14 @@
         Trade Expectancy = (Win Rate * Average Win) - (Loss Rate * Average Loss)
     ```
 
-[] Daily PnL :
+[s] Daily PnL :
   * {Pnl:Float, Day:Date}[] eg [{100$, 2021-01-01}, {-200$, 2021-01-02}]
   * Chart to use : Bar chart date on x-axis and PnL on y-axis
   * This is the profit or loss that a trader has made on each day over a given period of time. It is calculated by taking the sum of all the profits and losses from each trade on each day. The formula is as follows:
         ```
             Daily PnL = Sum of all profits and losses on each day
         ```
-[] Daily Cumulative PnL :
+[x] Daily Cumulative PnL :
   * Chart to use : Area chart date on x-axis and PnL on y-axis
   * {Pnl:Float, Day:Date}[] eg [{100$, 2021-01-01}, {-100$, 2021-01-02}]
   * This is the cumulative profit or loss that a trader has made on each day over a given period of time. It is calculated by taking the sum of all the profits and losses from each trade on each day and adding it to the previous day's cumulative profit or loss. The formula is as follows:
@@ -71,7 +71,7 @@
 [] Fx Trading Score :
   * Chart to use : Radar chart
   * Value type: float as percentage eg 80% over 100%
-  * This is proprietary score that measures the overall performance of a trader in the market. It is calculated by taking into account various factors such as win rate, profit factor, average win/loss trade and for consistency 
+  * This is proprietary score that measures the overall performance of a trader in the market. It is calculated by taking into account various factors such as win rate, profit factor, average win/loss trade and for consistency consecutive winning/loosing days and trades. The formula is as follows:
     ```
         Fx Trading Score = (Win Rate * 0.3) + (Profit Factor * 0.3) + (Average Win Trade * 0.2) + (Daily PnL * 0.2)
     ```
