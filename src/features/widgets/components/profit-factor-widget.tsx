@@ -1,13 +1,7 @@
 "use client"
 
 import { TrendingUp } from "lucide-react"
-import {
-  Label,
-  PolarGrid,
-  PolarRadiusAxis,
-  RadialBar,
-  RadialBarChart,
-} from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, LabelList } from "recharts"
 
 import {
   Card,
@@ -17,93 +11,64 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { ChartConfig, ChartContainer } from "@/components/ui/chart"
+import {
+  ChartConfig,
+  ChartContainer,
+} from "@/components/ui/chart"
+import { Berkshire_Swash } from "next/font/google"
+import { cn } from "@/lib/utils"
+import { Currency } from "@/lib/helpers"
 
-export const description = "A radial chart with text"
 
-const chartData = [
-  { browser: "safari", visitors: 200, fill: "var(--color-safari)" },
-]
+
 
 const chartConfig = {
-  visitors: {
-    label: "Visitors",
+  profitFactor: {
+    label: "Profit Factor",
+    color: "hsl(var(--green-bg))",
   },
-  safari: {
-    label: "Safari",
-    color: "hsl(var(--chart-2))",
+  lossFactor: {
+    label: "Loss Factor",
+    color: "hsl(var(--red-bg))",
+  },
+  label: {
+    color: "hsl(var(--f2))",
   },
 } satisfies ChartConfig
 
-export function ProfitFactorWidget() {
+interface ProfitFactorWidgetProps {
+  profitFactor: number,
+  lossFactor: number,
+}
+export function ProfitFactorWidget({profitFactor,lossFactor}: ProfitFactorWidgetProps) {
+const chartData = {
+    profitFactor: profitFactor,
+    lossFactor: lossFactor,
+    profitFactorp: profitFactor / (profitFactor + lossFactor) * 100,
+    lossFactorp: lossFactor / (profitFactor + lossFactor) * 100,
+};
+
+
   return (
-    <Card className="flex flex-col w-full h-full">
-      <CardHeader className="items-center pb-0">
-        <CardTitle>Radial Chart - Text</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
-      </CardHeader>
-      <CardContent className="flex-1 pb-0">
-        <ChartContainer
-          config={chartConfig}
-          className="mx-auto aspect-square max-h-[250px]"
-        >
-          <RadialBarChart
-            data={chartData}
-            startAngle={0}
-            endAngle={250}
-            innerRadius={80}
-            outerRadius={110}
-          >
-            <PolarGrid
-              gridType="circle"
-              radialLines={false}
-              stroke="none"
-              className="first:fill-muted last:fill-background"
-              polarRadius={[86, 74]}
-            />
-            <RadialBar dataKey="visitors" background cornerRadius={10} />
-            <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
-              <Label
-                content={({ viewBox }) => {
-                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                    return (
-                      <text
-                        x={viewBox.cx}
-                        y={viewBox.cy}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                      >
-                        <tspan
-                          x={viewBox.cx}
-                          y={viewBox.cy}
-                          className="fill-foreground text-4xl font-bold"
-                        >
-                          {chartData[0].visitors.toLocaleString()}
-                        </tspan>
-                        <tspan
-                          x={viewBox.cx}
-                          y={(viewBox.cy || 0) + 24}
-                          className="fill-muted-foreground"
-                        >
-                          Visitors
-                        </tspan>
-                      </text>
-                    )
-                  }
-                }}
-              />
-            </PolarRadiusAxis>
-          </RadialBarChart>
-        </ChartContainer>
-      </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 font-medium leading-none">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="leading-none text-muted-foreground">
-          Showing total visitors for the last 6 months
-        </div>
-      </CardFooter>
-    </Card>
-  )
+      <div className="h-full w-full">
+          <Card className="w-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Profit Factor</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-row items-start justify-start gap-4" >
+                  <div className={cn("text-2xl font-bold", chartData.profitFactor >= 1 ? "text-foreground-green" : "text-foreground-red")}>
+                      {chartData.profitFactor.toFixed(2)}
+                  </div>
+                  <ChartContainer config={chartConfig} className="h-8 w-full">
+                      <BarChart layout="vertical" data={[chartData]} margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
+                          <XAxis type="number" tickLine={false} axisLine={false} hide className="w-full" />
+                          <YAxis type="category" hide />
+                          <Bar dataKey="profitFactorp" stackId="a" radius={[4, 0, 0, 4]} className="fill-background-green"></Bar>
+                          <Bar dataKey="lossFactorp" stackId="a" radius={[0, 4, 4, 0]} className="fill-background-red"></Bar>
+                      </BarChart>
+                  </ChartContainer>
+              </CardContent>
+          </Card>
+      </div>
+  );
 }

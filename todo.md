@@ -11,7 +11,7 @@
         Total PnL = Sum of all profits - Sum of all losses
     ```
 
-[] Trade Win/Loose Rate :
+[x] Trade Win/Loose Rate :
   * Value type: float eg 70% with Win: 7 Loss: 3 Breakeven: 0
   * Chart to use : Pie chart
   * This is the percentage of trades that a trader has won, lost or breakeven over a given period of time. It is calculated by taking the number of winning trades and dividing it by the total number of trades, the number of losing trades and dividing it by the total number of trades, and the number of breakeven trades and dividing it by the total number of trades. The formula is as follows:
@@ -20,7 +20,7 @@
         Loss Rate = Number of losing trades / Total number of trades
         Breakeven Rate = Number of breakeven trades / Total number of trades
     ```
-[] Profit Factor : 
+[x] Profit Factor : 
   * Value type: float eg 1.5
   * Chart to use : No chart
   * This is the ratio of the total profit to the total loss that a trader has made over a given period of time. It is calculated by taking the sum of all the profits and dividing it by the sum of all the losses. The formula is as follows:
@@ -28,7 +28,7 @@
         Profit Factor = Sum of all profits / Sum of all losses
     ```
 
-[] Average Win/Loss Trade : 
+[x] Average Win/Loss Trade : 
     * Value type: Win: float eg 100$ Loss: float eg 50$
     * Chart to use : Stacked bar chart
     * This is the average amount that a trader wins or loses on each trade. It is calculated by taking the sum of all the profits and dividing it by the number of winning trades, and taking the sum of all the losses and dividing it by the number of losing trades. The formula is as follows:
