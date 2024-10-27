@@ -73,7 +73,21 @@
   * Value type: float as percentage eg 80% over 100%
   * This is proprietary score that measures the overall performance of a trader in the market. It is calculated by taking into account various factors such as win rate, profit factor, average win/loss trade and for consistency consecutive winning/loosing days and trades. The formula is as follows:
     ```
-        Fx Trading Score = (Win Rate * 0.3) + (Profit Factor * 0.3) + (Average Win Trade * 0.2) + (Daily PnL * 0.2)
+    There are some proprietary factoring formulas to calculate the Fx Trading Score
+    # Consistency:
+      * Consistency Score = (1 - (Highest Profit or Loss Day / Absolute Value of Total PnL)) * 100.
+      * Kelly Criterion %(Can use this to suggest a share size to use) = Win Ratio - ((1 - Win Ratio) / (Average Win / Average Loss))
+          * Eg if Win Ratio is 70%, Average Win is 100$ and Average Loss is 50$ then Kelly Criterion % = 70% - ((1 - 70%) / (100 / 50)) = 70% - (30% / 2) = 70% - 15% = 55% and this means that trader can place 55% of his capital on each trade. If a trader has 25.000$ capital then he can place 13.750$ on each trade. 
+    # Risk Management
+      * Sortino Ratio = (Total PnL - Risk Free Rate) / Downside Deviation
+          * Downside Deviation = Square Root of (Sum of all negative returns squared / Total number of negative returns)
+          * Risk Free Rate = 0.02 (2%)
+      * Maximum Drawdown = (Highest Peak - Lowest Trough) / Highest Peak
+    # Scaling In and Out
+      * MAE (Maximum Adverse Excursion): Measures the maximum loss a trade incurs before becoming profitable, helping analyze entry timing and risk.
+      * MFE (Maximum Favorable Excursion): Measures the highest unrealized profit of a trade before it is closed, aiding in analyzing exit efficiency.
+      * Partial Fill and Order Matching Algorithms: Tracking efficiency in scaling in and out. Algorithms analyze partial entries and exits against potential full position moves to measure effectiveness.
+
     ```
 
 

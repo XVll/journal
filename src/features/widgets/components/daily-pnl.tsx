@@ -32,7 +32,7 @@ chartData: { date: Date, pnl: number }[]
 }
 export function DailyPnlWidget({ chartData }: DailyPnlWidgetProps) {
     return (
-        <Card>
+        <Card className="w-full h-full">
             <CardHeader>
                 <CardTitle>Bar Chart - Negative</CardTitle>
             </CardHeader>

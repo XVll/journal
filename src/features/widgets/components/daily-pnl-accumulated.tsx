@@ -19,7 +19,7 @@ chartData: { date: Date, pnl: number }[]
 
 export function DailyPnlAccumulatedWidget({ chartData }: DailyPnlAccumulatedWidgetProps) {
     return (
-        <Card>
+        <Card className="w-full h-full">
             <CardHeader>
                 <CardTitle>Area Chart - Gradient</CardTitle>
             </CardHeader>
