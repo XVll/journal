@@ -65,7 +65,7 @@ const chartData =
                   <CardTitle className="text-sm font-medium">Trade Win %</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-row items-start justify-start gap-4">
-                  <div className={cn("text-2xl font-bold", chartData.winp > 0 ? "text-foreground-green" : "text-foreground-red")}>
+                  <div className={cn("text-2xl font-bold", chartData.winp >= 50 ? "text-foreground-green" : "text-foreground-red")}>
                       {chartData.winp.toFixed(2)}%
                   </div>
                   <ChartContainer config={chartConfig} className="w-full h-8">
@@ -73,13 +73,19 @@ const chartData =
                           <XAxis type="number" tickLine={false} axisLine={false} hide className="w-full" />
                           <YAxis type="category" hide />
                           <Bar dataKey="winp" stackId="a" fill="var(--color-win)" radius={[4, 0, 0, 4]} className="w-full">
-                              <LabelList dataKey="win" position="inside" offset={8} className="fill-foreground-green" fontSize={12} />
+                              {
+                                    chartData.winp > 0 && <LabelList dataKey="win" position="inside" offset={8} className="fill-foreground-green" fontSize={12} />
+                              }
                           </Bar>
                           <Bar dataKey="breakevenp" stackId="a" fill="var(--color-breakeven)" radius={[0, 0, 0, 0]} >
-                              <LabelList dataKey="breakeven" position="inside" offset={8} className="fill-foreground-blue" fontSize={12} />
+                              {
+                                    chartData.breakevenp > 0 && <LabelList dataKey="breakeven" position="inside" offset={8} className="fill-foreground-blue" fontSize={12} />
+                              }
                           </Bar>
                           <Bar dataKey="lossp" stackId="a" fill="var(--color-loss)" radius={[0, 4, 4, 0]} >
-                              <LabelList dataKey="loss" position="inside" offset={8} className="fill-foreground-red" fontSize={12} />
+                              {
+                                    chartData.lossp > 0 && <LabelList dataKey="loss" position="inside" offset={8} className="fill-foreground-red" fontSize={12} />
+                              }
                           </Bar>
                       </BarChart>
                   </ChartContainer>

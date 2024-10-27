@@ -1,67 +1,75 @@
 "use client"
 
-import { TrendingUp } from "lucide-react"
-import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from "recharts"
+import {TrendingUp} from "lucide-react"
+import {PolarAngleAxis, PolarGrid, Radar, RadarChart} from "recharts"
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
 } from "@/components/ui/card"
 import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
+    ChartConfig,
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
 } from "@/components/ui/chart"
+import {Currency} from "@/lib/helpers";
+import {cn} from "@/lib/utils";
 
-export const description = "A radar chart"
-
-const chartData = [
-  { month: "January", desktop: 186 },
-  { month: "February", desktop: 305 },
-  { month: "March", desktop: 237 },
-  { month: "April", desktop: 273 },
-]
 
 const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "hsl(var(--chart-1))",
-  },
+    factor: {
+        label: "Value",
+        color: "hsl(var(--chart-1))",
+    },
 } satisfies ChartConfig
 
-export function FxScoreWidget() {
-  return (
-    <Card>
-      <CardHeader className="items-center pb-4">
-        <CardTitle>Radar Chart</CardTitle>
-      </CardHeader>
-      <CardContent className="pb-0">
-        <ChartContainer
-          config={chartConfig}
-          className="mx-auto aspect-square max-h-[250px]"
-        >
-          <RadarChart data={chartData}>
-            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-            <PolarAngleAxis dataKey="month" />
-            <PolarGrid />
-            <Radar
-              dataKey="desktop"
-              fill="var(--color-desktop)"
-              fillOpacity={0.6}
-            />
-          </RadarChart>
-        </ChartContainer>
-      </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 font-medium leading-none">
-          Your score is 55% <TrendingUp className="h-4 w-4" />
-        </div>
-      </CardFooter>
-    </Card>
-  )
+interface FxScoreWidgetProps {
+    chartData: { factor: string; value: number, displayValue: string }[],
+    totalScore: number,
+    betSize: number,
+
+}
+
+export function FxScoreWidget({chartData, totalScore, betSize}: FxScoreWidgetProps) {
+    return (
+        <Card className={"w-full h-full"}>
+            <CardHeader className="items-center pb-4">
+                <CardTitle>Score</CardTitle>
+            </CardHeader>
+            <CardContent className="pb-0">
+                <ChartContainer
+                    config={chartConfig}
+                    className="mx-auto aspect-square max-h-[250px] w-full h-full"
+                >
+                    <RadarChart data={chartData}>
+                        <ChartTooltip formatter={(value, s, k) => k.payload.displayValue} cursor={false}
+                                      content={<ChartTooltipContent indicator={"line"}/>}/>
+                        <PolarAngleAxis dataKey="factor"/>
+                        <PolarGrid/>
+                        <Radar
+                            dataKey="value"
+                            fill="var(--color-factor)"
+                            fillOpacity={0.6}
+                        />
+                    </RadarChart>
+                </ChartContainer>
+            </CardContent>
+            <CardFooter className="flex-col gap-2 text-sm">
+                <div className={cn("flex items-center gap-2 font-medium leading-none",
+                    totalScore >= 40 ? "text-foreground-yellow" :
+                        totalScore >= 50 ? "text-foreground-green" : "text-foreground-red"
+                )}>
+                    Your score is {totalScore.toFixed(2)}% <TrendingUp className="h-4 w-4"/>
+                </div>
+                <div className="flex items-center gap-2 font-medium leading-none">
+                    Suggested bet size {Currency(betSize)} <TrendingUp className="h-4 w-4"/>
+                </div>
+            </CardFooter>
+        </Card>
+    )
 }

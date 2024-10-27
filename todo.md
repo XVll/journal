@@ -82,11 +82,13 @@
       * Sortino Ratio = (Total PnL - Risk Free Rate) / Downside Deviation
           * Downside Deviation = Square Root of (Sum of all negative returns squared / Total number of negative returns)
           * Risk Free Rate = 0.02 (2%)
-      * Maximum Drawdown = (Highest Peak - Lowest Trough) / Highest Peak
     # Scaling In and Out
       * MAE (Maximum Adverse Excursion): Measures the maximum loss a trade incurs before becoming profitable, helping analyze entry timing and risk.
       * MFE (Maximum Favorable Excursion): Measures the highest unrealized profit of a trade before it is closed, aiding in analyzing exit efficiency.
       * Partial Fill and Order Matching Algorithms: Tracking efficiency in scaling in and out. Algorithms analyze partial entries and exits against potential full position moves to measure effectiveness.
+    # Profit Factor
+        * In order to normalize this value, we can use the following formula:
+          * Normalized Profit Factor = (Pf 
 
     ```
 
