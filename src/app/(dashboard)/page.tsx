@@ -51,38 +51,35 @@ function calculateCumulativeDailyPnl(trades: any[], pnlType: PnlType): { date: D
 
     return cumulativeDailyPnl;
 }
-// K-Ratio is a measure of consistency in trading. 
-function calculateKRatio(dailyCumulativePnl: { date: Date; pnl: number, gain:number }[]): number {
-
-    // Calculate the slope of the cumulative PnL
+// K-Ratio is a measure of consistency in trading. This indicates how consistent the trader is in making profits. A K-Ratio of 1 indicates that the trader is making profits consistently. A K-Ratio of less than 1 indicates that the trader is not making profits consistently.
+function calculateKRatio(dailyCumulativePnl: { pnl: number, gain: number }[]): number {
     const n = dailyCumulativePnl.length;
-    const meanDate = dailyCumulativePnl.reduce((sum, val) => sum + val.date.getTime(), 0) / n;
-    const meanPnl = dailyCumulativePnl.reduce((sum, val) => sum + val.gain, 0) / n;
+    const meanIndex = (n - 1) / 2;
+    const meanPnl = dailyCumulativePnl.reduce((sum, val) => sum + val.pnl, 0) / n;
 
-    const numerator = dailyCumulativePnl.reduce((sum, val) => sum + (val.date.getTime() - meanDate) * (val.gain - meanPnl), 0);
-    const denominator = dailyCumulativePnl.reduce((sum, val) => sum + (val.date.getTime() - meanDate) ** 2, 0);
+    const numerator = dailyCumulativePnl.reduce((sum, val, i) => sum + (i - meanIndex) * (val.pnl - meanPnl), 0);
+    const denominator = dailyCumulativePnl.reduce((sum, _, i) => sum + (i - meanIndex) ** 2, 0);
     const slope = numerator / denominator;
 
-    const variance = dailyCumulativePnl.reduce((sum, val) => sum + (val.gain - meanPnl) ** 2, 0) / n;
+    const variance = dailyCumulativePnl.reduce((sum, val) => sum + (val.pnl - meanPnl) ** 2, 0) / n;
     const standardDeviation = Math.sqrt(variance);
     const kRatio = slope / standardDeviation;
 
+    console.log("Slope:", slope);
     console.log("Standard Deviation:", standardDeviation);
-    console.log("Daily Cumulative PnL:", dailyCumulativePnl);
-    console.log("K-Ratio:", kRatio * 33);
-    return kRatio * 33;
+    console.log("K-Ratio:", kRatio);
+    return kRatio;
 }
+
 const trades = [
-    { pnl: 100, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 2, 1), avgPrice: 1.2, volume: 100 },
-    { pnl: 300, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 2, 2), avgPrice: 1.2, volume: 100 },
-    { pnl: 400, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 2, 3), avgPrice: 1.2, volume: 100 },
-    { pnl: -100, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 2, 4), avgPrice: 1.2, volume: 100 },
-    { pnl: 100, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 2, 5), avgPrice: 1.2, volume: 100 }, 
-    { pnl: -100, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 2, 6), avgPrice: 1.2, volume: 100 },
-    { pnl: 100, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 2, 7), avgPrice: 1.2, volume: 100 },
-    { pnl: -500, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 2, 8), avgPrice: 1.2, volume: 100 },
-    { pnl: 100, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 2, 9), avgPrice: 1.2, volume: 100 },
-    { pnl: 500, commissions: 0, result: TradeResult.BreakEven, closeDate: new Date(2024, 2, 10), avgPrice: 1.2, volume: 100 },
+    { pnl: 10, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 1), avgPrice: 1.2, volume: 100 },
+    { pnl: -10, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 2), avgPrice: 1.2, volume: 100 }, 
+    { pnl: 10, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 22), avgPrice: 1.2, volume: 100 },
+    { pnl: 10, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 23), avgPrice: 1.2, volume: 100 },
+    { pnl: 10, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 24), avgPrice: 1.2, volume: 100 },
+    { pnl: 10, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 25), avgPrice: 1.2, volume: 100 }, 
+    { pnl: 10, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 26), avgPrice: 1.2, volume: 100 }, 
+    { pnl: 10, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 27), avgPrice: 1.2, volume: 100 }, 
 ];
 
 export default function Dashboard() {
