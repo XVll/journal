@@ -13,7 +13,7 @@ import { AnimatePresence, m } from "framer-motion";
 import { useGetCalendarDataQuery } from "../../hooks/use-get-calendar-data-query";
 import { generateDailyCalendarStats, generateWeeklyCalendarStats, generateMonthlyCalendarStats } from "../../transformers/transformers";
 
-export type CalendarDayStats = {
+export type DailyStats = {
   date: Date;
   result: TradeResult;
   pnl: number;
@@ -44,7 +44,7 @@ const calendarTargets: CalendarTarget = {
   monthly: 2000,
 };
 
-const modifiers = (tradeDays: Record<string, CalendarDayStats>) => {
+const modifiers = (tradeDays: Record<string, DailyStats>) => {
   return {
       winningDay: Object.keys(tradeDays) .filter((date) => tradeDays[date].result === TradeResult.Win) .map((date) => new Date(date)),
       losingDay: Object.keys(tradeDays) .filter((date) => tradeDays[date].result === TradeResult.Loss) .map((date) => new Date(date)),

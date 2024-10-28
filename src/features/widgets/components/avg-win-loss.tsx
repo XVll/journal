@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/chart"
 import {Berkshire_Swash} from "next/font/google"
 import {cn} from "@/lib/utils"
-import {Currency} from "@/lib/helpers"
+import {FormatUnit} from "@/lib/helpers"
+import {Unit} from "@/features/filter/types";
 
 
 const chartConfig = {
@@ -37,14 +38,16 @@ const chartConfig = {
 interface AvgWinLossWidgetProps {
     avgWin: number,
     avgLoss: number,
+    unit: Unit,
 }
 
-export function AvgWinLossWidget({avgWin, avgLoss}: AvgWinLossWidgetProps) {
+export function AvgWinLossWidget({avgWin, avgLoss, unit}: AvgWinLossWidgetProps) {
+    avgLoss = Math.abs(avgLoss);
     const chartData = {
         avgWin: avgWin,
         avgLoss: avgLoss,
-        avgWinnp: avgWin / (avgWin + avgLoss) * 100,
-        avgLossp: avgLoss / (avgWin + avgLoss) * 100,
+        avgWinP: avgWin / ((avgWin + avgLoss) || 1) * 100,
+        avgLossP: avgLoss / ((avgWin + avgLoss) || 1) * 100,
     };
 
 
@@ -57,26 +60,26 @@ export function AvgWinLossWidget({avgWin, avgLoss}: AvgWinLossWidgetProps) {
                 <CardContent className="flex flex-row items-start justify-start gap-4">
                     <div
                         className={cn("text-2xl font-bold", chartData.avgWin / chartData.avgLoss >= 1 ? "text-foreground-green" : "text-foreground-red")}>
-                        {(chartData.avgWin / chartData.avgLoss).toFixed(2)}
+                        {(chartData.avgWin / (chartData.avgLoss || 1)).toFixed(2)}
                     </div>
                     <ChartContainer config={chartConfig} className="h-8 w-full">
                         <BarChart layout="vertical" data={[chartData]} margin={{left: 0, right: 0, top: 0, bottom: 0}}>
                             <XAxis type="number" tickLine={false} axisLine={false} hide className="w-full"/>
                             <YAxis type="category" hide/>
-                            <Bar dataKey="avgWin" stackId="a" radius={[4, 0, 0, 4]} className="fill-background-green">
+                            <Bar dataKey="avgWinP" stackId="a" radius={[4, 0, 0, 4]} className="fill-background-green">
                                 {
-                                    chartData.avgWinnp > 0 &&
+                                    chartData.avgWin > 0 &&
                                     <LabelList dataKey="avgWin" position="inside" offset={8}
                                                className="fill-foreground-green" fontSize={12}
-                                               formatter={(value: number) => Currency(value)}/>
+                                               formatter={(value: number) => FormatUnit(value, unit)}/>
                                 }
                             </Bar>
-                            <Bar dataKey="avgLoss" stackId="a" radius={[0, 4, 4, 0]} className="fill-background-red">
+                            <Bar dataKey="avgLossP" stackId="a" radius={[0, 4, 4, 0]} className="fill-background-red">
                                 {
-                                    chartData.avgLossp > 0 &&
+                                    chartData.avgLoss > 0 &&
                                     <LabelList dataKey="avgLoss" position="inside" offset={8}
                                                className="fill-foreground-red" fontSize={12}
-                                               formatter={(value: number) => Currency(value)}/>
+                                               formatter={(value: number) => FormatUnit(value, unit)}/>
                                 }
                             </Bar>
                         </BarChart>

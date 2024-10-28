@@ -17,8 +17,9 @@ import {
     ChartTooltip,
     ChartTooltipContent,
 } from "@/components/ui/chart"
-import {Currency} from "@/lib/helpers";
+import {FormatUnit} from "@/lib/helpers";
 import {cn} from "@/lib/utils";
+import {Unit} from "@/features/filter/types";
 
 
 const chartConfig = {
@@ -32,10 +33,11 @@ interface FxScoreWidgetProps {
     chartData: { factor: string; value: number, displayValue: string }[],
     totalScore: number,
     betSize: number,
+    unit : Unit
 
 }
 
-export function FxScoreWidget({chartData, totalScore, betSize}: FxScoreWidgetProps) {
+export function FxScoreWidget({chartData, totalScore, betSize, unit}: FxScoreWidgetProps) {
     return (
         <Card className={"w-full h-full"}>
             <CardHeader className="items-center pb-4">
@@ -61,13 +63,13 @@ export function FxScoreWidget({chartData, totalScore, betSize}: FxScoreWidgetPro
             </CardContent>
             <CardFooter className="flex-col gap-2 text-sm">
                 <div className={cn("flex items-center gap-2 font-medium leading-none",
-                    totalScore >= 40 ? "text-foreground-yellow" :
-                        totalScore >= 50 ? "text-foreground-green" : "text-foreground-red"
+                    totalScore >= 50 ? "text-foreground-green" :
+                        totalScore >= 40 ? "text-foreground-yellow" : "text-foreground-red"
                 )}>
                     Your score is {totalScore.toFixed(2)}% <TrendingUp className="h-4 w-4"/>
                 </div>
                 <div className="flex items-center gap-2 font-medium leading-none">
-                    Suggested bet size {Currency(betSize)} <TrendingUp className="h-4 w-4"/>
+                    Suggested bet size {FormatUnit(betSize, unit)} <TrendingUp className="h-4 w-4"/>
                 </div>
             </CardFooter>
         </Card>

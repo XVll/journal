@@ -1,8 +1,8 @@
 import { TradeResult, Trade } from "@prisma/client";
 import { getWeeksInMonth, getWeekOfMonth, isSameMonth } from "date-fns";
-import { CalendarDayStats, CalendarWeekStats } from "../components/advanced-calendar/advanced-calendar";
+import { DailyStats, CalendarWeekStats } from "../components/advanced-calendar/advanced-calendar";
 
-export const generateWeeklyCalendarStats = (dailyStats: Record<string, CalendarDayStats>, date: Date) => {
+export const generateWeeklyCalendarStats = (dailyStats: Record<string, DailyStats>, date: Date) => {
     const weeklyStats: Record<number, CalendarWeekStats> = {};
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -27,7 +27,7 @@ export const generateWeeklyCalendarStats = (dailyStats: Record<string, CalendarD
 };
 export const generateDailyCalendarStats = (tradeData: Trade[] | undefined, date:Date) => {
     const trades = tradeData?.filter((trade) => new Date(trade.startDate).getMonth() === date.getMonth());
-    const tradeDays: Record<string, CalendarDayStats> = {};
+    const tradeDays: Record<string, DailyStats> = {};
     if (!trades) return tradeDays;
 
     trades.forEach((trade) => {
@@ -49,7 +49,7 @@ export const generateDailyCalendarStats = (tradeData: Trade[] | undefined, date:
 
     return tradeDays;
 };
-export const generateMonthlyCalendarStats = (dayStats: Record<string, CalendarDayStats>, selectedCalendarDate: Date) => {
+export const generateMonthlyCalendarStats = (dayStats: Record<string, DailyStats>, selectedCalendarDate: Date) => {
     return {
         month: selectedCalendarDate.getMonth(),
         pnl: Object.values(dayStats).reduce((acc, day) => acc + day.pnl, 0),

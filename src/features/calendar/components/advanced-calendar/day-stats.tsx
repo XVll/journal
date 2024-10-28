@@ -1,13 +1,13 @@
 import { TradeResult } from "@prisma/client";
 import { GiBullseye } from "react-icons/gi";
 
-import { CalendarDayStats, CalendarTarget } from "./advanced-calendar";
+import { DailyStats, CalendarTarget } from "./advanced-calendar";
 import { DayContentProps } from "react-day-picker";
 import { FaShieldAlt } from "react-icons/fa";
 import { UTCDate } from "@date-fns/utc";
 
 
-export const DayStats = ({ date, tradeDays, calendarTargets }: DayContentProps & {tradeDays: Record<string, CalendarDayStats>, calendarTargets:CalendarTarget}) => {
+export const DayStats = ({ date, tradeDays, calendarTargets }: DayContentProps & {tradeDays: Record<string, DailyStats>, calendarTargets:CalendarTarget}) => {
   return (
     <div className="flex w-full h-full">
       <div className="w-full flex flex-col">

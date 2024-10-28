@@ -1,6 +1,6 @@
 
 export enum Unit {
-     Currency, RMultiple
+     Currency, RMultiple, Percent
 }
 export enum PnlType {
     Gross, Net

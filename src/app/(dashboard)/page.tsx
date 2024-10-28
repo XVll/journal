@@ -1,7 +1,7 @@
 "use client";
-import {AdvancedCalendar} from "@/features/calendar/components/advanced-calendar/advanced-calendar";
+import {AdvancedCalendar, DailyStats} from "@/features/calendar/components/advanced-calendar/advanced-calendar";
 import {useFilterStore} from "@/features/filter/hooks/use-filters";
-import {PnlType} from "@/features/filter/types";
+import {PnlType, Unit} from "@/features/filter/types";
 import AvgWinLossWidget from "@/features/widgets/components/avg-win-loss";
 import {DailyPnlWidget} from "@/features/widgets/components/daily-pnl";
 import {DailyPnlAccumulatedWidget} from "@/features/widgets/components/daily-pnl-accumulated";
@@ -10,100 +10,103 @@ import {FxScoreWidget} from "@/features/widgets/components/fx-score";
 import PnlWidget from "@/features/widgets/components/pnl-widget";
 import {ProfitFactorWidget} from "@/features/widgets/components/profit-factor-widget";
 import {WinLossWidget} from "@/features/widgets/components/win-loss";
-import {TradeResult} from "@prisma/client";
+import {Trade, TradeResult} from "@prisma/client";
+import {useGetCalendarDataQuery} from "@/features/calendar/hooks/use-get-calendar-data-query";
 
-// Todo : in order to decide if a trade win or loose we need to factor in the commissions. Remove Trade Result enum from The trade and calculate based on selected calculation type
-// enum for Gross and Net
-function calculateDailyPnL(trades: any[], pnlType: PnlType): { date: Date; pnl: number, gain: number }[] {
-    const dailyPnLMap = new Map<string, { date: Date; pnl: number, gain: number }>();
+function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType, unit: Unit, risk: number = 1, isPercentageRisk: boolean = false) {
+
+    if (!trades) return {
+        dailyStats: [],
+        sumOfProfit: 0,
+        sumOfLoss: 0,
+        winCount: 0,
+        lossCount: 0,
+        breakEvenCount: 0,
+    };
+    const dailyStatsMap = new Map<string, DailyStats>();
+
+    // Initialize accumulators for additional calculations
+    const result = {
+        sumOfProfit: 0,
+        sumOfLoss: 0,
+        winCount: 0,
+        lossCount: 0,
+        breakEvenCount: 0,
+    };
 
     trades.forEach((trade) => {
-        const dateKey = trade.closeDate.toISOString().split("T")[0];
+        const dateKey = trade.startDate.toISOString().split("T")[0];
 
-        const pnl = pnlType === PnlType.Gross ? trade.pnl : trade.pnl + trade.commissions;
-        const gain = (pnl / (trade.avgPrice * trade.volume / 2)) * 100;
+        // Calculate pnl based on pnlType
+        const pnl =
+            pnlType === PnlType.Gross
+                ? trade.pnl
+                : trade.pnl + trade.commission + trade.fees;
 
+        let actualPnl = pnl;
+        if (unit === Unit.Percent) {
+            // Percent gain
+            actualPnl = (pnl / (trade.averagePrice * trade.volume / 2)) * 100;
+        } else if (unit === Unit.RMultiple) {
+            const calculatedRisk = isPercentageRisk
+                ? (trade.averagePrice * trade.volume / 2) * (risk / 100)
+                : risk;
+            actualPnl = pnl / calculatedRisk;
+        }
 
-        if (dailyPnLMap.has(dateKey)) {
-            dailyPnLMap.get(dateKey)!.pnl += pnl;
-            dailyPnLMap.get(dateKey)!.gain += gain;
+        // Populate the dailyStatsMap
+        if (dailyStatsMap.has(dateKey)) {
+            dailyStatsMap.get(dateKey)!.pnl += actualPnl;
+            dailyStatsMap.get(dateKey)!.trades += 1;
+            dailyStatsMap.get(dateKey)!.result = dailyStatsMap.get(dateKey)!.pnl > 0 ? TradeResult.Win : dailyStatsMap.get(dateKey)!.pnl < 0 ? TradeResult.Loss : TradeResult.BreakEven;
+
         } else {
-            dailyPnLMap.set(dateKey, {date: trade.closeDate, pnl: pnl, gain: gain});
+            dailyStatsMap.set(dateKey, {date: trade.startDate, pnl: actualPnl, trades: 1, result: actualPnl > 0 ? TradeResult.Win : actualPnl < 0 ? TradeResult.Loss : TradeResult.BreakEven});
+        }
+
+        // Update accumulators based on trade result
+        if (trade.result === TradeResult.Win) {
+            result.sumOfProfit += actualPnl;
+            result.winCount += 1;
+        } else if (trade.result === TradeResult.Loss) {
+            result.sumOfLoss += actualPnl;
+            result.lossCount += 1;
+        } else if (trade.result === TradeResult.BreakEven) {
+            result.breakEvenCount += 1;
         }
     });
 
-    return Array.from(dailyPnLMap.values());
+    return {
+        dailyStats: Array.from(dailyStatsMap.values()),
+        ...result,
+    };
 }
 
-function calculateCumulativeDailyPnl(trades: any[], pnlType: PnlType): { date: Date; pnl: number, gain: number }[] {
-    const dailyPnl = calculateDailyPnL(trades, pnlType);
-
+function calculateCumulativeDailyPnl(dailyPnl: { date: Date; pnl: number }[]) {
     const sortedDailyPnl = dailyPnl.sort((a, b) => a.date.getTime() - b.date.getTime());
 
-    let cumulativePnl = 0;
-    let cumulativeGain = 0;
-    const cumulativeDailyPnl = sortedDailyPnl.map((trade) => {
-        cumulativePnl += trade.pnl;
-        cumulativeGain += trade.gain;
-        return {date: trade.date, pnl: cumulativePnl, gain: cumulativeGain};
+    let cumulativeActualPnl = 0;  // Track only the modified cumulative PnL
+    return sortedDailyPnl.map((day) => {
+        cumulativeActualPnl += day.pnl;  // No need to track 'gain' separately
+        return {date: day.date, pnl: cumulativeActualPnl};  // Only return cumulativePnl now
     });
-
-    return cumulativeDailyPnl;
 }
 
-
-// Consistency Index (R-Squared),
-// This doesn't take into account if the trades are profitable or not just the consistency of the trades
-// Even if the trades are all losses, but the pnl is consistent the score will be high
-function calculateConsistencyScore(cumulativePnLs: { date: Date, pnl: number }[]): number {
-    const n = cumulativePnLs.length;
-    const tradeIndices = Array.from({length: n}, (_, i) => i + 1);
-
-    const meanX = (n + 1) / 2;
-    const meanY = cumulativePnLs.reduce((acc, trade) => acc + trade.pnl, 0) / n;
-
-// Calculate regression coefficients
-    let numerator = 0;
-    let denominator = 0;
-    for (let i = 0; i < n; i++) {
-        numerator += (tradeIndices[i] - meanX) * (cumulativePnLs[i].pnl - meanY);
-        denominator += Math.pow(tradeIndices[i] - meanX, 2);
-    }
-
-
-    const slope = numerator / denominator;
-    const intercept = meanY - slope * meanX;
-
-// Calculate R-squared
-    let ssTotal = 0;
-    let ssResidual = 0;
-    for (let i = 0; i < n; i++) {
-        const predictedY = slope * tradeIndices[i] + intercept;
-        ssTotal += Math.pow(cumulativePnLs[i].pnl - meanY, 2);
-        ssResidual += Math.pow(cumulativePnLs[i].pnl - predictedY, 2);
-    }
-
-    const rSquared = 1 - ssResidual / ssTotal;
-
-// Normalize to 0 - 100 scale
-    return rSquared * 100;
-}
-
-const calculateSortinoRatio = (dailyPnls: { date: Date, pnl: number }[], riskFreeRate = 0) => {
-    const n = dailyPnls.length;
+const calculateSortinoRatio = (dailyPnLs: { date: Date, pnl: number }[], benchmarkValue: number, riskFreeRate = 0) => {
+    const n = dailyPnLs.length;
     if (n === 0) return {
         Sortino_Ratio: 0,
         Sortino_Ratio_Scaled: 0
     }
 
     // Step 1: Calculate the average return (Rp)
-    const meanReturn = dailyPnls.reduce((a, b) => a + b.pnl, 0) / n;
+    const meanReturn = dailyPnLs.reduce((a, b) => a + b.pnl, 0) / n;
 
     // Step 2: Calculate the excess return over the risk-free rate
     const excessReturn = meanReturn - riskFreeRate;
 
     // Step 3: Identify negative returns (downside)
-    const negativeReturns = dailyPnls.filter(pnl => pnl.pnl < riskFreeRate);
+    const negativeReturns = dailyPnLs.filter(pnl => pnl.pnl < riskFreeRate);
 
     if (negativeReturns.length === 0) {
         // No negative returns, downside deviation is zero
@@ -122,7 +125,7 @@ const calculateSortinoRatio = (dailyPnls: { date: Date, pnl: number }[], riskFre
     // Step 5: Calculate the Sortino Ratio
     const sortinoRatio = excessReturn / downsideDeviation;
 
-    const sortinoRatioScaled = Math.max(Math.min((sortinoRatio / 2) * 100, 100), 0);
+    const sortinoRatioScaled = Math.max(Math.min((sortinoRatio / benchmarkValue) * 100, 100), 0);
 
     return {
         Sortino_Ratio: sortinoRatio,
@@ -131,45 +134,15 @@ const calculateSortinoRatio = (dailyPnls: { date: Date, pnl: number }[], riskFre
 
 }
 
-interface Trade {
-    pnl: number;
-    commissions: number;
-    result: TradeResult;
-    closeDate: Date;
-    avgPrice: number;
-    volume: number;
-}
-
-enum TradeResult {
-    Win,
-    Loss,
-}
-
-function calculateKRatio(trades: Trade[]) {
-    if (trades.length < 2) {
+function calculateKRatio(cumulativePnL: { date: Date, pnl: number }[], benchmarkValue: number) {
+    if (cumulativePnL.length < 2) {
         // Not enough data to compute K-Ratio
         return {K_Ratio: 0, K_Ratio_Scaled: 0};
     }
 
-    // Step 1: Sort trades by closeDate (optional if trades are already sequential)
-    trades.sort((a, b) => a.closeDate.getTime() - b.closeDate.getTime());
+    const t: number[] = cumulativePnL.map((_, index) => index);
 
-    // Step 2: Compute cumulative PnL and time indices
-    const cumulativePnL: number[] = [];
-    const t: number[] = []; // time indices starting from 0
-
-    let cumulativeSum = 0;
-
-    for (let i = 0; i < trades.length; i++) {
-        const trade = trades[i];
-        cumulativeSum += trade.pnl;
-        cumulativePnL.push(cumulativeSum);
-
-        // Time indices starting from 0
-        t.push(i);
-    }
-
-    const N = trades.length;
+    const N = cumulativePnL.length;
     const y = cumulativePnL;
 
     // Step 3: Compute sums for linear regression
@@ -180,9 +153,9 @@ function calculateKRatio(trades: Trade[]) {
 
     for (let i = 0; i < N; i++) {
         sum_t += t[i];
-        sum_y += y[i];
+        sum_y += y[i].pnl;
         sum_t2 += t[i] * t[i];
-        sum_t_y += t[i] * y[i];
+        sum_t_y += t[i] * y[i].pnl;
     }
 
     // Step 4: Calculate slope (b) and intercept (a)
@@ -196,7 +169,7 @@ function calculateKRatio(trades: Trade[]) {
     let ss_res = 0;
     for (let i = 0; i < N; i++) {
         const y_pred = a + b * t[i];
-        const residual = y[i] - y_pred;
+        const residual = y[i].pnl - y_pred;
         ss_res += residual * residual;
     }
 
@@ -212,8 +185,7 @@ function calculateKRatio(trades: Trade[]) {
     const K = (b / SE_b) * Math.sqrt(N);
 
     // Step 8: Scale the K-Ratio between 0 and 100
-    const K_Ratio_max = 20; // Assumed maximum K-Ratio for scaling
-    let K_scaled = (K / K_Ratio_max) * 100;
+    let K_scaled = (K / benchmarkValue) * 100;
     K_scaled = Math.max(0, Math.min(100, K_scaled)); // Ensure the value is between 0 and 100
 
     return {
@@ -222,13 +194,7 @@ function calculateKRatio(trades: Trade[]) {
     }
 }
 
-function calculatePerformanceScore(
-    pfScore: number,
-    winRatio: number,
-    avgWlsScore: number,
-    rms: number,
-    cs: number
-): number {
+function calculatePerformanceScore(pfScore: number, winRatio: number, avgWlsScore: number, rms: number, cs: number): number {
 
 
     const FPS = 0.50 * pfScore + 0.10 * winRatio + 0.10 * avgWlsScore + 0.10 * rms + 0.30 * cs;
@@ -237,94 +203,85 @@ function calculatePerformanceScore(
 }
 
 
-const trades = [
-    {pnl: 170, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 1), avgPrice: 1.2, volume: 100},
-    {pnl: -130, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 10, 2), avgPrice: 1.2, volume: 100},
-    {pnl: -120, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 10, 3), avgPrice: 1.2, volume: 100},
-    {pnl: 120, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 4), avgPrice: 1.2, volume: 100},
-    {pnl: -120, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 10, 5), avgPrice: 1.2, volume: 100},
-    {pnl: 120, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 6), avgPrice: 1.2, volume: 100},
-    {pnl: 150, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 7), avgPrice: 1.2, volume: 100},
-    {pnl: 160, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 8), avgPrice: 1.2, volume: 100},
-    {pnl: 160, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 9), avgPrice: 1.2, volume: 100},
-    {pnl: -120, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 10, 10), avgPrice: 1.2, volume: 100},
-    {pnl: 150, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 11), avgPrice: 1.2, volume: 100},
-    {pnl: -120, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 10, 12), avgPrice: 1.2, volume: 100},
-    {pnl: -140, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 10, 13), avgPrice: 1.2, volume: 100},
-    {pnl: -130, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 10, 14), avgPrice: 1.2, volume: 100},
-    {pnl: 120, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 15), avgPrice: 1.2, volume: 100},
-    {pnl: -140, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 10, 16), avgPrice: 1.2, volume: 100},
-    {pnl: 150, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 17), avgPrice: 1.2, volume: 100},
-    {pnl: -140, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 10, 18), avgPrice: 1.2, volume: 100},
-    {pnl: 150, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 19), avgPrice: 1.2, volume: 100},
-    {pnl: 180, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 20), avgPrice: 1.2, volume: 100},
-    {pnl: -150, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 10, 21), avgPrice: 1.2, volume: 100},
-    {pnl: -140, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 10, 22), avgPrice: 1.2, volume: 100},
-    {pnl: 100, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 23), avgPrice: 1.2, volume: 100},
-    {pnl: -150, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 10, 24), avgPrice: 1.2, volume: 100},
-    {pnl: 110, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 25), avgPrice: 1.2, volume: 100},
-    {pnl: 113, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 26), avgPrice: 1.2, volume: 100},
-    {pnl: -150, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 10, 27), avgPrice: 1.2, volume: 100},
-    {pnl: -150, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 10, 28), avgPrice: 1.2, volume: 100},
-    {pnl: 115, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 29), avgPrice: 1.2, volume: 100},
-    {pnl: -140, commissions: 0, result: TradeResult.Loss, closeDate: new Date(2024, 10, 30), avgPrice: 1.2, volume: 100},
-    {pnl: 110, commissions: 0, result: TradeResult.Win, closeDate: new Date(2024, 10, 31), avgPrice: 1.2, volume: 100},
-
-
-
-];
-
 export default function Dashboard() {
+    const {data: trades, isLoading} = useGetCalendarDataQuery(new Date(2024, 9, 1));
+
     const {unit, pnlType} = useFilterStore();
+    const balance = 100000;
+    const risk = 5;
+    const isPercentageRisk = true;
+    const profitFactorBenchmark = 2;
+    const winRateBenchmark = 100;
+    const avgWinLossRatioBenchmark = 2;
+    const riskScoreBenchmark = 2;
+    const consistencyScoreBenchmark = 20;
+
+    const {
+        sumOfProfit,
+        sumOfLoss,
+        winCount,
+        lossCount,
+        breakEvenCount,
+        dailyStats
+    } = calculateDailyPnLAndStats(trades, pnlType, unit, risk, isPercentageRisk);
+    const dailyPnlCumulative = calculateCumulativeDailyPnl(dailyStats);
+    const riskScore = calculateSortinoRatio(dailyStats, riskScoreBenchmark);
+    const consistencyScore = calculateKRatio(dailyPnlCumulative, consistencyScoreBenchmark);
 
 
-    const sumOfProfit = trades.reduce((acc, trade) => (trade.result === TradeResult.Win ? acc + trade.pnl : acc), 0);
-    const sumOfLoss = trades.reduce((acc, trade) => (trade.result === TradeResult.Loss ? acc + trade.pnl : acc), 0);
-    const winCount = trades.filter((trade) => trade.result === TradeResult.Win).length;
-    const looseCount = trades.filter((trade) => trade.result === TradeResult.Loss).length;
-    const breakevenCount = trades.filter((trade) => trade.result === TradeResult.BreakEven).length;
-
-    const totalTradeCount = winCount + looseCount + breakevenCount;
-    const avgWin = sumOfProfit / winCount || 0;
-    const avgLoss = Math.abs(sumOfLoss / looseCount) || 0;
-    const avgWinLossRatio = avgWin / avgLoss;
-    const profitFactor = Math.abs(sumOfProfit / sumOfLoss);
-    const lossFactor = Math.abs(sumOfLoss / sumOfProfit);
+    const totalTradeCount = winCount + lossCount + breakEvenCount;
+    const avgWin = winCount ? sumOfProfit / winCount : 0;
+    const avgLoss = lossCount ? sumOfLoss / lossCount : 0;
+    const avgWinLossRatio = avgLoss ? avgWin : avgWin / avgLoss;
+    const profitFactor = sumOfLoss ? sumOfProfit / Math.abs(sumOfLoss) : sumOfProfit;
+    const lossFactor = sumOfProfit ? sumOfLoss / Math.abs(sumOfProfit) : sumOfLoss;
     const totalPnl = sumOfProfit + sumOfLoss;
-    const winRate = (winCount / (winCount + looseCount + breakevenCount)) * 100;
-    const looseRate = (looseCount / (winCount + looseCount + breakevenCount)) * 100;
-    const breakevenRate = (breakevenCount / (winCount + looseCount + breakevenCount)) * 100;
-    const expectancy = (avgWin * winRate - avgLoss * looseRate) / 100;
+    const winRate = winCount ? (winCount / (winCount + lossCount + breakEvenCount)) * 100 : 0;
+    const lossRate = lossCount ? (lossCount / (winCount + lossCount + breakEvenCount)) * 100 : 0;
+    const breakEvenRate = breakEvenCount ? (breakEvenCount / (winCount + lossCount + breakEvenCount)) * 100 : 0;
+    const expectancy = (avgWin * winRate + avgLoss * lossRate) / 100;
+    const kellyCriterion = avgWinLossRatio ? (winRate / 100 - ((1 - winRate / 100) / avgWinLossRatio)) : 0;
+    const suggestedShareSize = kellyCriterion * balance;
 
-    const dailyPnl = calculateDailyPnL(trades, pnlType);
-    const dailyPnlCumulative = calculateCumulativeDailyPnl(trades, pnlType);
-    // const consistencyScore = calculateConsistencyScore(dailyPnlCumulative);
-    const riskScore = calculateSortinoRatio(dailyPnl);
-    const consistencyScore = calculateKRatio(trades);
-    const kellyCriterion = (winRate / 100 - ((1 - winRate / 100) / avgWinLossRatio));
-    const suggestedShareSize = kellyCriterion * 100000;
-
-    const profitFactorScaled = Math.min(profitFactor, 2) / 2 * 100;
-    const avgWinLossRatioScaled = Math.min(avgWin / avgLoss, 2) / 2 * 100;
+    const profitFactorScaled = Math.min(profitFactor, profitFactorBenchmark) / profitFactorBenchmark * 100;
+    const avgWinLossRatioScaled = Math.min(avgWin / avgLoss, avgWinLossRatioBenchmark) / avgWinLossRatioBenchmark * 100;
 
     const performanceScore = calculatePerformanceScore(profitFactorScaled, winRate, avgWinLossRatioScaled, riskScore.Sortino_Ratio_Scaled, consistencyScore.K_Ratio_Scaled);
     const scoreData = [
-        {factor: "Win Rate", value: winRate, displayValue: `${winRate.toFixed(2)}%`},
-        {factor: "Profit Factor", value: profitFactorScaled, displayValue: `${profitFactor.toFixed(2)}`},
-        {factor: "Risk Management", value: riskScore.Sortino_Ratio_Scaled, displayValue: `${riskScore.Sortino_Ratio.toFixed(2)}`},
-        {factor: "Consistency", value: consistencyScore.K_Ratio_Scaled, displayValue: `${consistencyScore.K_Ratio.toFixed(2)}`},
-        {factor: "Avg Win/Loss", value: avgWinLossRatioScaled, displayValue: `${(avgWinLossRatio).toFixed(2)}`},
+        {
+            factor: "Win Rate",
+            value: winRate,
+            displayValue: `${winRate.toFixed(2)}% vs Benchmark : ${winRateBenchmark}%`
+        },
+        {
+            factor: "Profit Factor",
+            value: profitFactorScaled,
+            displayValue: `${profitFactor.toFixed(2)} vs Benchmark: ${profitFactorBenchmark}`
+        },
+        {
+            factor: "Risk Management",
+            value: riskScore.Sortino_Ratio_Scaled,
+            displayValue: `${riskScore.Sortino_Ratio.toFixed(2)} vs Benchmark : ${riskScoreBenchmark}`
+        },
+        {
+            factor: "Consistency",
+            value: consistencyScore.K_Ratio_Scaled,
+            displayValue: `${consistencyScore.K_Ratio.toFixed(2)} vs Benchmark : ${consistencyScoreBenchmark}`
+        },
+        {
+            factor: "Avg Win/Loss",
+            value: avgWinLossRatioScaled,
+            displayValue: `${(avgWinLossRatio).toFixed(2)} vs Benchmark : ${avgWinLossRatioBenchmark}`
+        },
     ]
-    // * Kelly Criterion %(Can use this to suggest a share size to use) = Win Ratio - ((1 - Win Ratio) / (Average Win / Average Loss))
-// * Eg if Win Ratio is 70%, Average Win is 100$ and Average Loss is 50$ then Kelly Criterion % = 70% - ((1 - 70%) / (100 / 50)) = 70% - (30% / 2) = 70% - 15% = 55% and this means that trader can place 55% of his capital on each trade. If a trader has 25.000$ capital then he can place 13.750$ on each trade.
     return (
         <div className="pt-2">
             <div className="grid grid-cols-12 gap-2">
                 <div className="col-span-2 row-span-1">
-                    <PnlWidget pnl={totalPnl} tradeCount={totalTradeCount}/>
+                    <PnlWidget pnl={totalPnl} tradeCount={totalTradeCount} unit={unit}/>
                 </div>
                 <div className="col-span-2 row-span-1">
-                    <ExpectancyWidget expectancy={expectancy}/>
+                    <ExpectancyWidget expectancy={expectancy} unit={unit}/>
                 </div>
                 <div className="col-span-2 row-span-1">
                     <ProfitFactorWidget profitFactor={profitFactor} lossFactor={lossFactor}/>
@@ -332,36 +289,32 @@ export default function Dashboard() {
                 <div className="col-span-3 row-span-1">
                     <WinLossWidget
                         win={winCount}
-                        loss={looseCount}
-                        breakeven={breakevenCount}
+                        loss={lossCount}
+                        breakeven={breakEvenCount}
                         winRate={winRate}
-                        looseRate={looseRate}
-                        breakevenRate={breakevenRate}
+                        looseRate={lossRate}
+                        breakevenRate={breakEvenRate}
                     />
                 </div>
                 <div className="col-span-3 row-span-1">
-                    <AvgWinLossWidget avgWin={avgWin} avgLoss={avgLoss}/>
+                    <AvgWinLossWidget avgWin={avgWin} avgLoss={avgLoss} unit={unit}/>
                 </div>
                 <div className="col-span-4 col-start-1 row-span-1">
-                    <FxScoreWidget totalScore={performanceScore} chartData={scoreData} betSize={suggestedShareSize}/>
+                    <FxScoreWidget totalScore={performanceScore} chartData={scoreData} betSize={suggestedShareSize}
+                                   unit={unit}/>
                 </div>
                 <div className="col-span-4 row-span-1">
-                    <DailyPnlAccumulatedWidget chartData={dailyPnlCumulative}/>
+                    <DailyPnlAccumulatedWidget chartData={dailyPnlCumulative} unit={unit}/>
                 </div>
                 <div className="col-span-4 row-span-1">
-                    <DailyPnlWidget chartData={dailyPnl}/>
+                    <DailyPnlWidget chartData={dailyStats} unit={unit}/>
                 </div>
 
                 <div className="col-span-12 col-start-1 row-span-3">
                     <AdvancedCalendar/>
                 </div>
                 {
-                    // Profit Factor
-                    // Trade Win % : A widget that shows percentage of winning trades and number of trades
-                    // Streaks : A widget that shows the longest winning and losing streaks for both trades and days
-                    // Fx Score : A widget that shows the overall performance of the trader using a proprietary algorithm
-                    // Using Win/Loss ratio, Profit Factor, Streaks, and other metrics
-                    // Daily Cumulative P&L : A widget that shows the daily cumulative profit or loss
+                    // Streaks: A widget that shows the longest winning and losing streaks for both trades and days
                 }
             </div>
             {/*

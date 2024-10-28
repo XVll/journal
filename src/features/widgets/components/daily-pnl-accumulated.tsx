@@ -5,19 +5,22 @@ import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import {Unit} from "@/features/filter/types";
+import {FormatUnit} from "@/lib/helpers";
 
 
 const chartConfig = {
     pnl: {
-        label: "pnl",
+        label: "PnL",
         color: "hsl(var(--chart-1))",
     },
 } satisfies ChartConfig;
 interface DailyPnlAccumulatedWidgetProps {
-chartData: { date: Date, pnl: number }[]
+chartData: { date: Date, pnl: number }[],
+    unit:Unit
 }
 
-export function DailyPnlAccumulatedWidget({ chartData }: DailyPnlAccumulatedWidgetProps) {
+export function DailyPnlAccumulatedWidget({ chartData ,unit}: DailyPnlAccumulatedWidgetProps) {
     return (
         <Card className="w-full h-full">
             <CardHeader>
@@ -29,7 +32,7 @@ export function DailyPnlAccumulatedWidget({ chartData }: DailyPnlAccumulatedWidg
                         <CartesianGrid vertical={false} />
                         <XAxis dataKey="date" tickLine={false} axisLine={false} tickFormatter={(value) => value.toLocaleDateString()} />
                         <YAxis dataKey="pnl" tickLine={false} axisLine={false} />
-                        <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                        <ChartTooltip cursor={false} content={<ChartTooltipContent  formatter={(val) => FormatUnit(val.toString(), unit)}/>} />
                         <defs>
                             <linearGradient id="fillpnl" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="var(--color-pnl)" stopOpacity={0.8} />
