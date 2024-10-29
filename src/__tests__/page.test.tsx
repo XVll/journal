@@ -57,8 +57,6 @@ test("Handles Scaling In/Out", async () => {
   expect(trades[0].endDate!.getSeconds()).toBe(0);
   expect(trades[0].direction).toBe("Long");
   expect(trades[0].volume).toBe(12000);
-  expect(trades[0].buyVolume).toBe(6000);
-  expect(trades[0].sellVolume).toBe(6000);
   expect(trades[0].openPosition).toBe(0);
   expect(trades[0].averagePrice).toBeCloseTo(3.3333);
   // Commission should be 0.0035 * 12000
@@ -99,10 +97,6 @@ test("Handles Scaling In/Out Short", async () => {
   expect(trades[0].direction).toBe("Short");
   // Volume should be 12000
   expect(trades[0].volume).toBe(12000);
-  // Buy Volume should be 6000
-  expect(trades[0].buyVolume).toBe(6000);
-  // Sell Volume should be 6000
-  expect(trades[0].sellVolume).toBe(6000);
   // Open Position should be 0
   expect(trades[0].openPosition).toBe(0);
   // Average Price should be 3.333333333...
@@ -150,9 +144,6 @@ test("Handles Time as is if its same.", async () => {
   // Volume should be 12000
   expect(trades[0].volume).toBe(12000);
   // Buy Volume should be 6000
-  expect(trades[0].buyVolume).toBe(6000);
-  // Sell Volume should be 6000
-  expect(trades[0].sellVolume).toBe(6000);
   // Open Position should be 0
   expect(trades[0].openPosition).toBe(0);
   // Average Price should be 3.333333333...

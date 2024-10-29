@@ -1,10 +1,13 @@
 import { cn } from "@/lib/utils";
 import { CalendarWeekStats } from "./advanced-calendar";
+import {FormatUnit} from "@/lib/helpers";
+import {Unit} from "@/features/filter/types";
 interface WeeklyStatsProps {
   weeklyStats: CalendarWeekStats;
+  unit : Unit;
 }
 
-export const WeeklyStats = ({weeklyStats}:WeeklyStatsProps ) => {
+export const WeeklyStats = ({weeklyStats, unit}:WeeklyStatsProps ) => {
   return (
       <div className="h-20">
           <div
@@ -18,7 +21,7 @@ export const WeeklyStats = ({weeklyStats}:WeeklyStatsProps ) => {
           >
               <div className="text-left text-sm font-bold">{weeklyStats.weekNumber}</div>
               <div className="mt-2 flex flex-col gap-1">
-                  <div className="text-left text-sm font-semibold">${weeklyStats.pnl.toFixed(2) || 0}</div>
+                  <div className="text-left text-sm font-semibold">${FormatUnit(weeklyStats.pnl, unit) || 0}</div>
                   <div className="text-left">
                       {weeklyStats.trades || 0} {weeklyStats.trades > 0 ? "Trades" : "Trade"}
                   </div>

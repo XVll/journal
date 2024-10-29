@@ -2,7 +2,7 @@
 import * as React from "react";
 import { DayContentProps, DayPicker } from "react-day-picker";
 import { Trade, TradeResult } from "@prisma/client";
-import { isWeekend} from "date-fns";
+import { isWeekend } from "date-fns";
 import { WeeklyStats } from "./weekly-stats";
 import { DayStats } from "./day-stats";
 import { MonthlyStats } from "./monthly-stats";
@@ -11,60 +11,47 @@ import { FaSpinner } from "react-icons/fa";
 import DatePicker from "@/components/custom/date-picker";
 import { AnimatePresence, m } from "framer-motion";
 import { useGetCalendarDataQuery } from "../../hooks/use-get-calendar-data-query";
-import { generateDailyCalendarStats, generateWeeklyCalendarStats, generateMonthlyCalendarStats } from "../../transformers/transformers";
+import {
+    generateDailyCalendarStats,
+    generateWeeklyCalendarStats,
+    generateMonthlyCalendarStats
+} from "../../transformers/transformers";
+import { useEffect } from "react";
+import { Unit } from "@/features/filter/types";
+import { DailyStats, ProfitTarget } from "@/features/calendar/types";
 
-export type DailyStats = {
-  date: Date;
-  result: TradeResult;
-  pnl: number;
-  trades: number;
-};
-export type CalendarWeekStats = {
-  weekNumber: number;
-  result: TradeResult;
-  pnl: number;
-  trades: number;
-};
-export type CalendarMonthStats = {
-  month: number;
-  result: TradeResult;
-  pnl: number;
-  trades: number;
-};
-export type CalendarTarget = {
-  dailyProfit: number;
-  dailyMaxLoss: number;
-  weekly: number;
-  monthly: number;
-};
-const calendarTargets: CalendarTarget = {
-  dailyProfit: 5000,
-  dailyMaxLoss: -5000,
-  weekly: 500,
-  monthly: 2000,
+
+const modifiers = (dailyStats: Record<string, DailyStats>) => {
+    return {
+        winningDay: Object.keys(dailyStats).filter((date) => dailyStats[date].result === TradeResult.Win).map((date) => new Date(date)),
+        losingDay: Object.keys(dailyStats).filter((date) => dailyStats[date].result === TradeResult.Loss).map((date) => new Date(date)),
+        breakEvenDay: Object.keys(dailyStats).filter((date) => dailyStats[date].result === TradeResult.BreakEven).map((date) => new Date(date)),
+        weekend: (date: Date) => isWeekend(date)
+    };
 };
 
-const modifiers = (tradeDays: Record<string, DailyStats>) => {
-  return {
-      winningDay: Object.keys(tradeDays) .filter((date) => tradeDays[date].result === TradeResult.Win) .map((date) => new Date(date)),
-      losingDay: Object.keys(tradeDays) .filter((date) => tradeDays[date].result === TradeResult.Loss) .map((date) => new Date(date)),
-      breakEvenDay: Object.keys(tradeDays) .filter((date) => tradeDays[date].result === TradeResult.BreakEven) .map((date) => new Date(date)),
-      weekend: (date: Date) => isWeekend(date),
-  };
-};
+interface AdvancedCalendarProps {
+    dailyStats: DailyStats[],
+    unit: Unit,
+    isLoading: boolean,
+    profitTarget: ProfitTarget
+}
 
-function AdvancedCalendar() {
+function AdvancedCalendar({ dailyStats, unit, isLoading , profitTarget}: AdvancedCalendarProps) {
     const [selectedCalendarDate, setSelectedCalendarDate] = React.useState(new Date());
-    const { data: trades, isLoading } = useGetCalendarDataQuery(selectedCalendarDate);
 
-    const dayStats = generateDailyCalendarStats(trades, selectedCalendarDate);
+    let dayStats = generateDailyCalendarStats(dailyStats, selectedCalendarDate);
     const weekStats = generateWeeklyCalendarStats(dayStats, selectedCalendarDate);
     const monthStats = generateMonthlyCalendarStats(dayStats, selectedCalendarDate);
+
+    useEffect(() => {
+        dayStats = generateDailyCalendarStats(dailyStats, selectedCalendarDate);
+    }, [dailyStats, selectedCalendarDate]);
 
     return (
         <div className="relative grid grid-cols-8 border p-2 rounded-xl">
             <AdvancedCalendarBase
-            className="col-span-7"
+                className="col-span-7"
                 onMonthChange={setSelectedCalendarDate}
                 modifiers={modifiers(dayStats)}
                 modifiersClassNames={{
@@ -72,10 +59,11 @@ function AdvancedCalendar() {
                     losingDay: "!bg-background-red !text-foreground-red hover:!bg-foreground-red/20",
                     breakEvenDay: "!bg-background-b1 !text-foreground-f1 hover:!bg-foreground-f1/20",
                     weekend:
-                        "bg-[repeating-linear-gradient(45deg,var(--tw-gradient-stops))] from-background-b2 from-[length:0_10px] to-background-b1 to-[length:0_20px]",
+                        "bg-[repeating-linear-gradient(45deg,var(--tw-gradient-stops))] from-background-b2 from-[length:0_10px] to-background-b1 to-[length:0_20px]"
                 }}
                 components={{
-                    DayContent: (props: DayContentProps) => <DayStats {...props} tradeDays={dayStats} calendarTargets={calendarTargets} />,
+                    DayContent: (props: DayContentProps) => <DayStats {...props} tradeDays={dayStats}
+                                                                      calendarTargets={profitTarget} unit={unit} />,
                     CaptionLabel: (date) => {
                         return (
                             <div>
@@ -92,21 +80,26 @@ function AdvancedCalendar() {
                                         </m.div>
                                     ) : (
                                         <>
-                                            <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
-                                                <div className="text-sm">{date.displayMonth.toLocaleString("default", { month: "long", year: "numeric" })}</div>
+                                            <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                                   exit={{ opacity: 0 }}
+                                                   transition={{ duration: 0.5 }}>
+                                                <div className="text-sm">{date.displayMonth.toLocaleString("default", {
+                                                    month: "long",
+                                                    year: "numeric"
+                                                })}</div>
                                             </m.div>
                                         </>
                                     )}
                                 </AnimatePresence>
                             </div>
                         );
-                    },
+                    }
                 }}
             />
             <div className="flex flex-col gap-[2px] ml-2">
-                <MonthlyStats monthlyStats={monthStats} />
+                <MonthlyStats monthlyStats={monthStats} unit={unit} />
                 {Object.keys(weekStats).map((weekNumber) => (
-                    <WeeklyStats key={weekNumber} weeklyStats={weekStats[Number(weekNumber)]} />
+                    <WeeklyStats key={weekNumber} weeklyStats={weekStats[Number(weekNumber)]} unit={unit} />
                 ))}
             </div>
         </div>

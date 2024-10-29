@@ -54,8 +54,6 @@ model Trade {
   type          TradeType
   status        TradeStatus
   volume        Int
-  buyVolume     Int
-  sellVolume    Int
   openPosition  Int
   averagePrice  Float
   commission    Float

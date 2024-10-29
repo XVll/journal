@@ -40,14 +40,6 @@ export const TradeDetails = ({trade, tradeId}:TradeDetailProps) => {
             <span>: {trade.volume}</span>
           </div>
           <div className="flex flex-row gap-2">
-            <span className="w-24">Buy Volume</span>
-            <span>: {trade.buyVolume}</span>
-          </div>
-          <div className="flex flex-row gap-2">
-            <span className="w-24">Sell Volume</span>
-            <span>: {trade.sellVolume}</span>
-          </div>
-          <div className="flex flex-row gap-2">
             <span className="w-24">Open Position</span>
             <span>: {trade.openPosition}</span>
           </div>

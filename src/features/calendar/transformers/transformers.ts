@@ -25,29 +25,17 @@ export const generateWeeklyCalendarStats = (dailyStats: Record<string, DailyStat
         return stats;
     });
 };
-export const generateDailyCalendarStats = (tradeData: Trade[] | undefined, date:Date) => {
-    const trades = tradeData?.filter((trade) => new Date(trade.startDate).getMonth() === date.getMonth());
-    const tradeDays: Record<string, DailyStats> = {};
-    if (!trades) return tradeDays;
-
-    trades.forEach((trade) => {
-        if (!trade.result) return;
-        const dailyStats = tradeDays[new Date(trade.startDate).toLocaleDateString()];
-        if (dailyStats) {
-            dailyStats.pnl += trade.pnl;
-            dailyStats.trades += 1;
-            dailyStats.result = dailyStats.pnl > 0 ? TradeResult.Win : dailyStats.pnl < 0 ? TradeResult.Loss : TradeResult.BreakEven;
-        } else {
-            tradeDays[new Date(trade.startDate).toLocaleDateString()] = {
-                date: trade.startDate,
-                result: trade.result,
-                pnl: trade.pnl,
-                trades: 1,
-            };
-        }
+export const generateDailyCalendarStats = (tradeData: DailyStats[] | undefined, date:Date) => {
+    const filteredTradeData = tradeData?.filter((trade) => {
+        return trade.date.getMonth() === date.getMonth() && trade.date.getFullYear() === date.getFullYear();
     });
+    const dayStats: Record<string, DailyStats> = {};
+    filteredTradeData?.forEach((trade) => {
+        const dateKey = trade.date.toLocaleDateString();
+        dayStats[dateKey] = trade;
+    });
+    return dayStats;
 
-    return tradeDays;
 };
 export const generateMonthlyCalendarStats = (dayStats: Record<string, DailyStats>, selectedCalendarDate: Date) => {
     return {

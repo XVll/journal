@@ -1,9 +1,9 @@
 "use client";
-import {z} from "zod";
-import {toast} from "@/hooks/use-toast";
-import {useState} from "react";
-import {Button} from "@/components/ui/button";
-import {FaDollarSign, FaFileInvoice, FaPercent, FaR} from "react-icons/fa6";
+import { z } from "zod";
+import { toast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { FaDollarSign, FaFileInvoice, FaPercent, FaR } from "react-icons/fa6";
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -12,20 +12,20 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import {PnlType, Unit} from "../types";
-import {FormDescription} from "@/components/ui/form";
-import {useFilterStore} from "../hooks/use-filters";
+import { PnlType, Unit } from "../types";
+import { FormDescription } from "@/components/ui/form";
+import { useFilterStore } from "../hooks/use-filters";
 
 const filterSchema = z.object({
     unit: z.string(),
     pnlType: z.string(),
     dateRange: z.date({
-        required_error: "Date is required",
+        required_error: "Date is required"
     })
 });
 
 const Filter = () => {
-    const {pnlType, unit, setUnit, setPnlType} = useFilterStore();
+    const { pnlType, unit, setUnit, setPnlType } = useFilterStore();
 
     const onSubmit = async () => {
         toast({
@@ -37,7 +37,7 @@ const Filter = () => {
                         unitType: Unit[unit]
                     }, null, 2)}</code>
                 </pre>
-            ),
+            )
         });
     };
 
@@ -50,14 +50,14 @@ const Filter = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56">
                     <DropdownMenuLabel>PnL Type</DropdownMenuLabel>
-                    <DropdownMenuSeparator/>
+                    <DropdownMenuSeparator />
                     <DropdownMenuCheckboxItem
                         checked={pnlType === PnlType.Gross}
                         onCheckedChange={() => setPnlType(PnlType.Gross)}
                     >
                         <div className="flex flex-col">
                 <span className="inline-flex items-center gap-2 text-center">
-                    <FaFileInvoice/> Gross
+                    <FaFileInvoice /> Gross
                 </span>
                             <span className="text-xs text-foreground-f3 ml-[1.4rem]">Commissions excluded</span>
                         </div>
@@ -68,7 +68,7 @@ const Filter = () => {
                     >
                         <div className="flex flex-col">
                 <span className="inline-flex items-center gap-2 text-center">
-                    <FaFileInvoice/> Net
+                    <FaFileInvoice /> Net
                 </span>
                             <span className="text-xs text-foreground-f3 ml-[1.4rem]">Commissions Included</span>
                         </div>
@@ -77,20 +77,18 @@ const Filter = () => {
             </DropdownMenu>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size={"sm"}>{unit === Unit.Currency ? "$" : "R"}</Button>
+                    <Button variant="outline"
+                            size={"sm"}>{unit === Unit.Currency ? "$" : unit === Unit.Percent ? "%" : "R"}</Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56">
                     <DropdownMenuLabel>Unit</DropdownMenuLabel>
-                    <DropdownMenuSeparator/>
-                    <DropdownMenuCheckboxItem
-                        checked={unit === Unit.Currency}
-                        onCheckedChange={() => setUnit(Unit.Currency)}
-                    >
-                        <div className="flex flex-col">
-                <span className="inline-flex items-center gap-2 text-center">
-                    <FaDollarSign/> Dollar
-                </span>
-                        </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem checked={unit === Unit.Currency} onCheckedChange={() => setUnit(Unit.Currency)}>
+                    <div className="flex flex-col">
+                        <span className="inline-flex items-center gap-2 text-center">
+                            <FaDollarSign /> Dollar
+                        </span>
+                    </div>
                     </DropdownMenuCheckboxItem>
                     <DropdownMenuCheckboxItem
                         checked={unit === Unit.Percent}
@@ -98,19 +96,20 @@ const Filter = () => {
                     >
                         <div className="flex flex-col">
                 <span className="inline-flex items-center gap-2 text-center">
-                    <FaPercent/> Percentage
+                    <FaPercent /> Percentage
                 </span>
+                            <span
+                                className="text-xs text-foreground-f3 ml-[1.4rem]">Percentage required</span>
                         </div>
                     </DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem
-                        checked={unit === Unit.RMultiple}
-                        onCheckedChange={() => setUnit(Unit.RMultiple)}
-                    >
+                    <DropdownMenuCheckboxItem checked={unit === Unit.RMultiple}
+                                              onCheckedChange={() => setUnit(Unit.RMultiple)}>
                         <div className="flex flex-col">
-                <span className="inline-flex items-center gap-2 text-center">
-                    <FaR/> R-Multiple
-                </span>
-                            <span className="text-xs text-foreground-f3 ml-[1.4rem]">Initial risk required</span>
+
+                        <span className="inline-flex items-center gap-2 text-center">
+                            <FaR /> R-Multiple
+                        </span>
+                            <span className="text-xs text-foreground-f3 ml-[1.4rem]">Risk required</span>
                         </div>
                     </DropdownMenuCheckboxItem>
                 </DropdownMenuContent>
@@ -119,7 +118,7 @@ const Filter = () => {
 
         </div>
     );
-}
+};
 
 
 export default Filter;

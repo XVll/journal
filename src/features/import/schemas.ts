@@ -44,8 +44,6 @@ export const TradeSchema = z.object({
     type: z.nativeEnum(TradeType),
     status: z.nativeEnum(TradeStatus),
     volume: z.number(),
-    buyVolume: z.number(),
-    sellVolume: z.number(),
     openPosition: z.number(),
     averagePrice: z.number(),
     commission: z.number(),

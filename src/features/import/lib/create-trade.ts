@@ -1,15 +1,6 @@
 import { ExecutionInput } from "@/features/import/types";
-import {
-    Execution,
-    Prisma,
-    ScalingAction,
-    TradeAction,
-    TradeDirection,
-    TradeResult,
-    TradeStatus,
-    TradeType
-} from "@prisma/client";
-import {createHash} from "crypto";
+import { Execution, Prisma, ScalingAction, TradeAction, TradeDirection, TradeResult, TradeStatus, TradeType } from "@prisma/client";
+import { createHash } from "crypto";
 
 function CalculateCommission(execution: ExecutionInput) {
     // 0.0035 for <300k, 0.0020 for <3m, 0.0015 for <20m
@@ -78,15 +69,15 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                 executionHash: createExecutionId(firstExecutionInput),
             };
 
-            const trade: Prisma.TradeUncheckedCreateWithoutExecutionsInput & {executions : Prisma.ExecutionUncheckedCreateWithoutTradeInput[]}= {
+            const trade: Prisma.TradeUncheckedCreateWithoutExecutionsInput & {
+                executions: Prisma.ExecutionUncheckedCreateWithoutTradeInput[];
+            } = {
                 account: account,
                 ticker: ticker,
                 type: firstExecution.type || TradeType.Stock,
                 startDate: new Date(firstExecution.date),
                 direction: firstExecution.action === TradeAction.Buy ? TradeDirection.Long : TradeDirection.Short,
                 volume: firstExecution.quantity,
-                buyVolume: firstExecution.action === TradeAction.Buy ? firstExecution.quantity : 0,
-                sellVolume: firstExecution.action === TradeAction.Sell ? firstExecution.quantity : 0,
                 openPosition: firstExecution.quantity || 0,
                 averagePrice: firstExecution.price,
                 commission: firstExecution.commission,
@@ -128,7 +119,7 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                     // If the execution is a sell and it partially closes the trade, add a new execution with the remaining quantity and it will appear as a short trade
                     if (execution.action === TradeAction.Sell && trade.openPosition < execution.quantity) {
                         executionQuantity = trade.openPosition;
-                        const newExecutionInput = {...executionInput};
+                        const newExecutionInput = { ...executionInput };
                         newExecutionInput.quantity = executionInput.quantity - trade.openPosition;
                         executionInputs.unshift(newExecutionInput);
                     }
@@ -138,13 +129,11 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                     trade.fees += execution.fees;
 
                     if (execution.action === TradeAction.Buy) {
-                        trade.averagePrice = (trade.averagePrice * trade.buyVolume + execution.price * executionQuantity) / (trade.buyVolume + executionQuantity);
-                        trade.buyVolume += executionQuantity;
+                        trade.averagePrice =
+                            (trade.averagePrice * trade.openPosition + execution.price * executionQuantity) / (trade.openPosition + executionQuantity);
+                        trade.openPosition += executionQuantity;
                     } else if (execution.action === TradeAction.Sell) {
-                        trade.buyVolume -= executionQuantity;
-                    }
-
-                    if (execution.action === TradeAction.Sell) {
+                        trade.openPosition -= executionQuantity;
                         if (!execution.pnl) {
                             trade.pnl += (execution.price - trade.averagePrice) * executionQuantity;
                             execution.pnl = (execution.price - trade.averagePrice) * executionQuantity;
@@ -155,12 +144,10 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                         execution.action === TradeAction.Buy
                             ? ScalingAction.ScaleIn
                             : execution.price > trade.averagePrice
-                                ? ScalingAction.ProfitTaking
-                                : ScalingAction.StopLoss;
+                              ? ScalingAction.ProfitTaking
+                              : ScalingAction.StopLoss;
 
-                    execution.tradePosition =
-                        execution.action === TradeAction.Buy ? trade.openPosition + executionQuantity : trade.openPosition - executionQuantity;
-                    trade.openPosition = execution.tradePosition;
+                    execution.tradePosition = trade.openPosition;
                     execution.avgPrice = trade.averagePrice;
                 } else if (trade.direction === TradeDirection.Short) {
                     let executionQuantity = executionInput?.quantity || 0;
@@ -169,7 +156,7 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                     // If the execution is a sell and it partially closes the trade, add a new execution with the remaining quantity and it will appear as a short trade
                     if (execution.action === TradeAction.Buy && trade.openPosition < execution.quantity) {
                         executionQuantity = trade.openPosition;
-                        const newExecutionInput = {...executionInput};
+                        const newExecutionInput = { ...executionInput };
                         newExecutionInput.quantity = executionInput.quantity - trade.openPosition;
                         executionInputs.unshift(newExecutionInput);
                     }
@@ -180,15 +167,13 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
 
                     if (execution.action === TradeAction.Sell) {
                         trade.averagePrice =
-                            (trade.averagePrice * trade.sellVolume + execution.price * executionQuantity) / (trade.sellVolume + executionQuantity);
-                        trade.sellVolume += executionQuantity;
+                            (trade.averagePrice * trade.openPosition + execution.price * executionQuantity) / (trade.openPosition + executionQuantity);
+                        trade.openPosition += executionQuantity;
                     } else if (execution.action === TradeAction.Buy) {
-                        trade.buyVolume += executionQuantity;
-                    }
-                    if (execution.action === TradeAction.Buy) {
+                        trade.openPosition -= executionQuantity;
                         if (!execution.pnl) {
-                            trade.pnl += (execution.price - trade.averagePrice) * executionQuantity;
-                            execution.pnl = (execution.price - trade.averagePrice) * executionQuantity;
+                            trade.pnl += (trade.averagePrice - execution.price) * executionQuantity;
+                            execution.pnl = (trade.averagePrice - execution.price) * executionQuantity;
                         } else trade.pnl += execution.pnl;
                     }
 
@@ -196,12 +181,10 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                         execution.action === TradeAction.Sell
                             ? ScalingAction.ScaleIn
                             : execution.price < trade.averagePrice
-                                ? ScalingAction.ProfitTaking
-                                : ScalingAction.StopLoss;
+                              ? ScalingAction.ProfitTaking
+                              : ScalingAction.StopLoss;
 
-                    execution.tradePosition =
-                        execution.action === TradeAction.Sell ? trade.openPosition + executionQuantity : trade.openPosition - executionQuantity;
-                    trade.openPosition = execution.tradePosition;
+                    execution.tradePosition = trade.openPosition;
                     execution.avgPrice = trade.averagePrice;
                 }
 

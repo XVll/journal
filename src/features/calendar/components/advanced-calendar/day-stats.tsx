@@ -1,13 +1,15 @@
 import { TradeResult } from "@prisma/client";
 import { GiBullseye } from "react-icons/gi";
 
-import { DailyStats, CalendarTarget } from "./advanced-calendar";
+import { DailyStats, ProfitTarget } from "./advanced-calendar";
 import { DayContentProps } from "react-day-picker";
 import { FaShieldAlt } from "react-icons/fa";
 import { UTCDate } from "@date-fns/utc";
+import {Unit} from "@/features/filter/types";
+import {FormatUnit} from "@/lib/helpers";
 
 
-export const DayStats = ({ date, tradeDays, calendarTargets }: DayContentProps & {tradeDays: Record<string, DailyStats>, calendarTargets:CalendarTarget}) => {
+export const DayStats = ({ date, tradeDays, calendarTargets, unit }: DayContentProps & {tradeDays: Record<string, DailyStats>, calendarTargets:ProfitTarget, unit:Unit}) => {
   return (
     <div className="flex w-full h-full">
       <div className="w-full flex flex-col">
@@ -26,7 +28,7 @@ export const DayStats = ({ date, tradeDays, calendarTargets }: DayContentProps &
         </div>
         {Object.keys(tradeDays).includes(new UTCDate(date.getFullYear(), date.getMonth(), date.getDate()).toLocaleDateString()) && (
           <div className="flex flex-col gap-1 mt-2">
-            <div className="text-left font-semibold text-sm">${tradeDays[new UTCDate(date.getFullYear(), date.getMonth(), date.getDate()).toLocaleDateString()]?.pnl.toFixed(2) || 0}</div>
+            <div className="text-left font-semibold text-sm">{FormatUnit(tradeDays[new UTCDate(date.getFullYear(), date.getMonth(), date.getDate()).toLocaleDateString()]?.pnl, unit) || 0}</div>
             <div className="text-left">{tradeDays[new UTCDate(date.getFullYear(), date.getMonth(), date.getDate()).toLocaleDateString()]?.trades || 0} Trades</div>
           </div>
         )}
