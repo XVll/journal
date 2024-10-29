@@ -51,16 +51,16 @@ model Trade {
   startDate     DateTime
   ticker        String
   direction     TradeDirection
-  type          TradeType      
-  status        TradeStatus    
-  volume        Int            
-  buyVolume     Int            
-  sellVolume    Int            
-  openPosition  Int            
-  averagePrice  Float          
-  commission    Float          
-  fees          Float          
-  pnl           Float          
+  type          TradeType
+  status        TradeStatus
+  volume        Int
+  buyVolume     Int
+  sellVolume    Int
+  openPosition  Int
+  averagePrice  Float
+  commission    Float
+  fees          Float
+  pnl           Float
   endDate       DateTime?
   result        TradeResult?
   executionTime Int?
@@ -83,7 +83,7 @@ model Execution {
   trade         Trade         @relation(fields: [tradeId], references: [id], onDelete: Cascade)
   tradeId       String
   fees          Float
-  type          TradeType      
+  type          TradeType
   commission    Float
   addLiquidity  Boolean
   executionHash String

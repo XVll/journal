@@ -3,7 +3,7 @@ import { Execution, Trade } from "@prisma/client";
 
 interface TradeDetailProps {
   tradeId: string;
-  trade: Trade & { executions: Execution[] };
+  trade: Trade & { executions?: Execution[] };
 }
 
 export const TradeDetails = ({trade, tradeId}:TradeDetailProps) => {
@@ -110,7 +110,7 @@ export const TradeDetails = ({trade, tradeId}:TradeDetailProps) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {trade.executions.map((execution) => (
+              {trade.executions?.map((execution) => (
                 <TableRow key={execution.id}>
                   <TableCell>{execution.id}</TableCell>
                   <TableCell>{execution.date.toLocaleString()}</TableCell>

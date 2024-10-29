@@ -12,6 +12,9 @@ import {ProfitFactorWidget} from "@/features/widgets/components/profit-factor-wi
 import {WinLossWidget} from "@/features/widgets/components/win-loss";
 import {Trade, TradeResult} from "@prisma/client";
 import {useGetCalendarDataQuery} from "@/features/calendar/hooks/use-get-calendar-data-query";
+import {DataTable} from "@/app/trades/data-table";
+import {columns} from "@/app/trades/columns";
+import {TradeDetails} from "@/app/trades/trade-detail";
 
 function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType, unit: Unit, risk: number = 1, isPercentageRisk: boolean = false) {
 
@@ -61,7 +64,12 @@ function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType
             dailyStatsMap.get(dateKey)!.result = dailyStatsMap.get(dateKey)!.pnl > 0 ? TradeResult.Win : dailyStatsMap.get(dateKey)!.pnl < 0 ? TradeResult.Loss : TradeResult.BreakEven;
 
         } else {
-            dailyStatsMap.set(dateKey, {date: trade.startDate, pnl: actualPnl, trades: 1, result: actualPnl > 0 ? TradeResult.Win : actualPnl < 0 ? TradeResult.Loss : TradeResult.BreakEven});
+            dailyStatsMap.set(dateKey, {
+                date: trade.startDate,
+                pnl: actualPnl,
+                trades: 1,
+                result: actualPnl > 0 ? TradeResult.Win : actualPnl < 0 ? TradeResult.Loss : TradeResult.BreakEven
+            });
         }
 
         // Update accumulators based on trade result
@@ -344,11 +352,17 @@ export default function Dashboard() {
             
             
             */}
+
             {/*
-          <DataTable columns={columns} data={trades} />
-          <TradeDetails trade={trades[0]} tradeId="" />
+            <TradeDetails trade={trades[0]} tradeId=""/>
 
             */}
+            {
+                isLoading ? <div>Loading...</div> :
+                <DataTable columns={columns} data={trades}/>
+            }
+
+
         </div>
     );
 }

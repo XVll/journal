@@ -138,11 +138,10 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                     trade.fees += execution.fees;
 
                     if (execution.action === TradeAction.Buy) {
-                        trade.averagePrice =
-                            (trade.averagePrice * trade.buyVolume + execution.price * executionQuantity) / (trade.buyVolume + executionQuantity);
+                        trade.averagePrice = (trade.averagePrice * trade.buyVolume + execution.price * executionQuantity) / (trade.buyVolume + executionQuantity);
                         trade.buyVolume += executionQuantity;
                     } else if (execution.action === TradeAction.Sell) {
-                        trade.sellVolume += executionQuantity;
+                        trade.buyVolume -= executionQuantity;
                     }
 
                     if (execution.action === TradeAction.Sell) {
