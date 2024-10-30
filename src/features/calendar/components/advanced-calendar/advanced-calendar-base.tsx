@@ -39,7 +39,7 @@ function AdvancedCalendarBase({
                       ? "[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
                       : "[&:has([aria-selected])]:rounded-md",
               ),
-              day: cn(buttonVariants({ variant: "ghost" }), "h-20 w-full text-xs  rounded-sm font-normal aria-selected:opacity-100 bg-background-bt1"),
+              day: cn(buttonVariants({ variant: "ghost" }), "h-16 py-1 px-2 w-full text-xs  rounded-sm font-normal aria-selected:opacity-100 bg-background-bt1"),
               day_range_start: "day-range-start",
               day_range_end: "day-range-end",
               day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",

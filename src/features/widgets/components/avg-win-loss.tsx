@@ -53,11 +53,11 @@ export function AvgWinLossWidget({avgWin, avgLoss, unit}: AvgWinLossWidgetProps)
 
     return (
         <div className="h-full w-full">
-            <Card className="w-full">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Card className="w-full px-4 py-2">
+                <CardHeader className="flex flex-row items-center justify-between p-0 pb-1">
                     <CardTitle className="text-sm font-medium">Avg Win/Loss</CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-row items-start justify-start gap-4">
+                <CardContent className="flex flex-row items-start justify-start gap-4 p-0">
                     <div
                         className={cn("text-2xl font-bold", chartData.avgWin / chartData.avgLoss >= 1 ? "text-foreground-green" : "text-foreground-red")}>
                         {(chartData.avgWin / (chartData.avgLoss || 1)).toFixed(2)}

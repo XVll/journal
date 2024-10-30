@@ -44,7 +44,7 @@ const Filter = () => {
     return (
         <div className="flex gap-2 justify-center items-center">
             <Button onClick={() => onSubmit()} variant="outline" className="min-w-16" size={"sm"}>Test</Button>
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="min-w-16" size={"sm"}>{PnlType[pnlType]}</Button>
                 </DropdownMenuTrigger>
@@ -75,7 +75,7 @@ const Filter = () => {
                     </DropdownMenuCheckboxItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline"
                             size={"sm"}>{unit === Unit.Currency ? "$" : unit === Unit.Percent ? "%" : "R"}</Button>

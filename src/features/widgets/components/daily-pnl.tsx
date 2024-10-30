@@ -40,13 +40,12 @@ export function DailyPnlWidget({chartData, unit}: DailyPnlWidgetProps) {
             <CardHeader>
                 <CardTitle>Bar Chart - Negative</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className={"pl-0"}>
                 <ChartContainer config={chartConfig}>
                     <BarChart accessibilityLayer data={chartData}>
                         <CartesianGrid vertical={false}/>
-                        <XAxis tickLine={false} axisLine={false} dataKey="date"
-                               tickFormatter={(value: Date) => value.toLocaleDateString()}/>
-                        <YAxis dataKey="pnl" tickLine={false} axisLine={false}/>
+                        <XAxis tickLine={false} tickMargin={8} axisLine={false} dataKey="date" tickFormatter={(value: Date) => value.toLocaleDateString()}/>
+                        <YAxis dataKey="pnl" tickLine={false} tickMargin={10} axisLine={false}/>
                         <ChartTooltip cursor={false} content={<ChartTooltipContent formatter={(val) => FormatUnit(val.toString(), unit)}/>}/>
                         <Bar dataKey="pnl" strokeWidth={2} radius={2}>
                             {chartData.map((item) => (

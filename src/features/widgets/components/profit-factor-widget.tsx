@@ -51,11 +51,11 @@ export function ProfitFactorWidget({profitFactor, lossFactor}: ProfitFactorWidge
 
     return (
         <div className="h-full w-full">
-            <Card className="w-full">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Card className="w-full py-2 px-4">
+                <CardHeader className="flex flex-row items-center justify-between p-0 pb-1">
                     <CardTitle className="text-sm font-medium">Profit Factor</CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-row items-start justify-start gap-4">
+                <CardContent className="flex flex-row items-start justify-start gap-4 p-0">
                     <div
                         className={cn("text-2xl font-bold", chartData.profitFactor > 1 && "text-foreground-green", chartData.profitFactor < 1 && "text-foreground-red")}>
                         {chartData.profitFactor.toFixed(2)}

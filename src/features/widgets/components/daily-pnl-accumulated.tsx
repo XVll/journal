@@ -24,14 +24,14 @@ export function DailyPnlAccumulatedWidget({ chartData ,unit}: DailyPnlAccumulate
     return (
         <Card className="w-full h-full">
             <CardHeader>
-                <CardTitle>Area Chart - Gradient</CardTitle>
+                <CardTitle>Daily Cumulative PnL</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className={"pl-0"}>
                 <ChartContainer config={chartConfig}>
-                    <AreaChart accessibilityLayer data={chartData}>
-                        <CartesianGrid vertical={false} />
-                        <XAxis dataKey="date" tickLine={false} axisLine={false} tickFormatter={(value) => value.toLocaleDateString()} />
-                        <YAxis dataKey="pnl" tickLine={false} axisLine={false} />
+                    <AreaChart accessibilityLayer data={chartData} margin={{left:0, right:0, top:0, bottom:0}}>
+                        <CartesianGrid vertical={false}/>
+                        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => value.toLocaleDateString()} />
+                        <YAxis dataKey="pnl" tickLine={false} axisLine={false} tickMargin={10}/>
                         <ChartTooltip cursor={false} content={<ChartTooltipContent  formatter={(val) => FormatUnit(val.toString(), unit)}/>} />
                         <defs>
                             <linearGradient id="fillpnl" x1="0" y1="0" x2="0" y2="1">

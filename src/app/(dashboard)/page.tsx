@@ -13,6 +13,9 @@ import { WinLossWidget } from "@/features/widgets/components/win-loss";
 import { Trade, TradeResult } from "@prisma/client";
 import { useGetCalendarDataQuery } from "@/features/calendar/hooks/use-get-calendar-data-query";
 import { DailyStats, ProfitTarget } from "@/features/calendar/types";
+import { StatsWidget } from "@/features/widgets/components/stats";
+import { FormatUnit } from "@/lib/helpers";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
 function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType, unit: Unit, risk: number = 1, percentageRisk: number = 1) {
     trades?.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
@@ -50,13 +53,19 @@ function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType
         let pnl = pnlType === PnlType.Gross
             ? trade.pnl
             : trade.pnl + trade.commission + trade.fees;
+        let commission = trade.commission;
+        let fee = trade.fees;
 
 
         if (unit === Unit.Percent) {
             // Percent gain
             pnl = pnl / ((trade.averagePrice * (trade.volume / 2)) * (percentageRisk / 100));
+            commission = commission / ((trade.averagePrice * (trade.volume / 2)) * (percentageRisk / 100));
+            fee = fee / ((trade.averagePrice * (trade.volume / 2)) * (percentageRisk / 100));
         } else if (unit === Unit.RMultiple) {
             pnl = pnl / risk;
+            commission = commission / risk;
+            fee = fee / risk;
         }
 
         // Populate the dailyStatsMap
@@ -105,8 +114,8 @@ function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType
 
         if (pnl > result.largestGain) result.largestGain = pnl;
         if (pnl < result.largestLoss) result.largestLoss = pnl;
-        result.totalCommission += trade.commission;
-        result.totalFees += trade.fees;
+        result.totalCommission += commission;
+        result.totalFees += fee;
         result.totalVolume += trade.volume;
 
     });
@@ -311,7 +320,6 @@ export default function Dashboard() {
     const winRate = winCount ? (winCount / (winCount + lossCount + breakEvenCount)) * 100 : 0;
     const lossRate = lossCount ? (lossCount / (winCount + lossCount + breakEvenCount)) * 100 : 0;
     const breakEvenRate = breakEvenCount ? (breakEvenCount / (winCount + lossCount + breakEvenCount)) * 100 : 0;
-    const expectancy = (avgWin * winRate + avgLoss * lossRate) / 100;
     const avgPerShareGainLoss = totalVolume ? totalPnl / (totalVolume / 2) : 0;
     const avgTradeGainLoss = totalTradeCount ? totalPnl / totalTradeCount : 0;
     const avgHoldTimeWin = winCount ? totalHoldTimeWin / winCount : 0;
@@ -355,50 +363,77 @@ export default function Dashboard() {
     ];
 
 
+    console.log(largestLoss);
 
     return (
         <div className="pt-2">
             <div className="grid grid-cols-12 gap-2">
-                <div className="col-span-2 row-span-1">
+                <div className={"flex flex-row col-span-4 gap-2"}>
                     <PnlWidget pnl={totalPnl} tradeCount={totalTradeCount} unit={unit} />
-                </div>
-                <div className="col-span-2 row-span-1">
-                    <ExpectancyWidget expectancy={expectancy} unit={unit} />
-                </div>
-                <div className="col-span-2 row-span-1">
                     <ProfitFactorWidget profitFactor={profitFactor} lossFactor={lossFactor} />
                 </div>
-                <div className="col-span-3 row-span-1">
-                    <WinLossWidget
-                        win={winCount}
-                        loss={lossCount}
-                        breakeven={breakEvenCount}
-                        winRate={winRate}
-                        looseRate={lossRate}
-                        breakevenRate={breakEvenRate}
-                    />
-                </div>
-                <div className="col-span-3 row-span-1">
+                <div className={"flex flex-row col-span-8 gap-2"}>
+                    <WinLossWidget win={winCount} loss={lossCount} breakeven={breakEvenCount} winRate={winRate}
+                                   looseRate={lossRate} breakevenRate={breakEvenRate} />
                     <AvgWinLossWidget avgWin={avgWin} avgLoss={avgLoss} unit={unit} />
                 </div>
-                <div className="col-span-4 col-start-1 row-span-1">
+                <div className={"flex flex-row col-span-12 gap-2"}>
                     <FxScoreWidget totalScore={performanceScore} chartData={scoreData} betSize={suggestedShareSize}
                                    unit={unit} />
-                </div>
-                <div className="col-span-4 row-span-1">
                     <DailyPnlAccumulatedWidget chartData={dailyPnlCumulative} unit={unit} />
-                </div>
-                <div className="col-span-4 row-span-1">
                     <DailyPnlWidget chartData={dailyStats} unit={unit} />
                 </div>
+                <div className={"col-span-4"}>
+                    <div className="">
+                        <Table>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell className={"w-0 whitespace-nowrap"}>Hold Time (Minute)</TableCell>
+                                    <TableCell>
+                                        <StatsWidget left={avgHoldTimeWin} right={avgHoldTimeLoss}
+                                                     mid={avgHoldTimeBreakEven}
+                                                     formatter={(v: any) => `${(v < 60 ? "<1" : (v / 60).toFixed(0))}`} />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className={"w-0 whitespace-nowrap"}>Largest Gain/Loss</TableCell>
+                                    <TableCell>
+                                        <StatsWidget left={largestGain} right={Math.abs(largestLoss)}
+                                                     formatter={(v: any) => `${FormatUnit(v, unit)}`} />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className={"w-0 whitespace-nowrap"}>Max Consecutive Win/Loss</TableCell>
+                                    <TableCell>
+                                        <StatsWidget left={maxConsecutiveWins} right={maxConsecutiveLoss} />
+                                    </TableCell>
+                                </TableRow>
 
-                <div className="col-span-12 col-start-1 row-span-3">
+                                <TableRow>
+                                    <TableCell className={"w-0 whitespace-nowrap"}>Avg Per Trade Gain/Loss</TableCell>
+                                    <TableCell>{FormatUnit(avgTradeGainLoss, unit)}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className={"w-0 whitespace-nowrap"}>Avg Per Share Gain/Loss</TableCell>
+                                    <TableCell>{FormatUnit(avgPerShareGainLoss, unit)}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className={"w-0 whitespace-nowrap"}>Commissions</TableCell>
+                                    <TableCell>{FormatUnit(totalCommission, unit)}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className={"w-0 whitespace-nowrap"}>Fees</TableCell>
+                                    <TableCell>{FormatUnit(totalFees, unit)}</TableCell>
+                                </TableRow>
+
+                            </TableBody>
+                        </Table>
+                    </div>
+                </div>
+                <div className="col-span-8">
                     <AdvancedCalendar dailyStats={dailyStats} unit={unit} isLoading={isLoading}
                                       profitTarget={profitTargets} />
                 </div>
-                {
-                    // Streaks: A widget that shows the longest winning and losing streaks for both trades and days
-                }
             </div>
             {/*
             

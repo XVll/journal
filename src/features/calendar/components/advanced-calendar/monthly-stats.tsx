@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
-import { CalendarMonthStats } from "./advanced-calendar";
 import {Unit} from "@/features/filter/types";
 import {FormatUnit} from "@/lib/helpers";
+import { CalendarMonthStats } from "@/features/calendar/types";
 interface MonthlyStatsProps {
   monthlyStats: CalendarMonthStats;
   unit: Unit;
