@@ -16,6 +16,9 @@ import { DailyStats, ProfitTarget } from "@/features/calendar/types";
 import { StatsWidget } from "@/features/widgets/components/stats";
 import { FormatUnit } from "@/lib/helpers";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScoreHistoryWidget } from "@/features/widgets/components/score-history";
+import { cn } from "@/lib/utils";
 
 function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType, unit: Unit, risk: number = 1, percentageRisk: number = 1) {
     trades?.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
@@ -69,19 +72,29 @@ function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType
         }
 
         // Populate the dailyStatsMap
-        const dailyStats = dailyStatsMap[dateKey];
+        let dailyStats = dailyStatsMap[dateKey];
         if (dailyStats) {
             dailyStats.pnl += pnl;
             dailyStats.trades += 1;
             dailyStats.result = dailyStats.pnl > 0 ? TradeResult.Win : dailyStats.pnl < 0 ? TradeResult.Loss : TradeResult.BreakEven;
+
 
         } else {
             dailyStatsMap[dateKey] = {
                 date: trade.startDate,
                 pnl: pnl,
                 trades: 1,
-                result: pnl > 0 ? TradeResult.Win : pnl < 0 ? TradeResult.Loss : TradeResult.BreakEven
+                result: pnl > 0 ? TradeResult.Win : pnl < 0 ? TradeResult.Loss : TradeResult.BreakEven,
+                scores: {
+                    overall: 0,
+                    avgWinLoss: 0,
+                    winRate: 0,
+                    profitFactor: 0,
+                    consistency: 0,
+                    riskManagement: 0
+                }
             };
+            dailyStats = dailyStatsMap[dateKey];
         }
 
 
@@ -117,6 +130,21 @@ function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType
         result.totalCommission += commission;
         result.totalFees += fee;
         result.totalVolume += trade.volume;
+
+
+        // Move this to a separate function this calculates for each trade; even though the result is correct, this is expensive.
+        // Keep totalProfit, totalLoss, winCount, lossCount, breakEvenCount on dailyStatsMap
+        const dailyPnlCumulative = calculateCumulativeDailyPnl(Array.from(Object.values(dailyStatsMap)));
+        const riskScore = calculateSortinoRatio(dailyPnlCumulative, 2);
+        const consistencyScore = calculateKRatioFromCumulativePnL(dailyPnlCumulative, 2);
+        dailyStats.scores.winRate = result.winCount ? (result.winCount / (result.winCount + result.lossCount + result.breakEvenCount)) * 100 : 0;
+        const profitFactor = result.sumOfLoss ? result.sumOfProfit / Math.abs(result.sumOfLoss) : result.sumOfProfit;
+        const avgWinLoss = (result.sumOfLoss / result.sumOfProfit) ? (result.sumOfProfit / result.winCount) / (result.sumOfLoss / result.lossCount) : (result.sumOfProfit / result.winCount);
+        dailyStats.scores.riskManagement = riskScore.Sortino_Ratio_Scaled;
+        dailyStats.scores.consistency = consistencyScore.K_Ratio_Scaled;
+        dailyStats.scores.profitFactor = Math.min(profitFactor, 2) / 2 * 100;
+        dailyStats.scores.avgWinLoss = Math.min(Math.abs(avgWinLoss), 2) / 2 * 100;
+        dailyStats.scores.overall = calculatePerformanceScore(dailyStats.scores.profitFactor, dailyStats.scores.winRate, dailyStats.scores.avgWinLoss, riskScore.Sortino_Ratio_Scaled, consistencyScore.K_Ratio_Scaled);
 
     });
 
@@ -226,7 +254,11 @@ function calculateKRatioFromCumulativePnL(dailyPnLs: { date: Date; pnl: number }
     }
 
     if (denominator === 0) {
-        throw new Error("Variance of time periods is zero; cannot perform linear regression.");
+        // throw new Error("Variance of time periods is zero; cannot perform linear regression.");
+        return {
+            K_Ratio: 0,
+            K_Ratio_Scaled: 0
+        };
     }
 
     const slope = numerator / denominator;
@@ -242,7 +274,11 @@ function calculateKRatioFromCumulativePnL(dailyPnLs: { date: Date; pnl: number }
 
     const degreesOfFreedom = n - 2;
     if (degreesOfFreedom <= 0) {
-        throw new Error("Not enough data points to calculate standard error.");
+        // throw new Error("Not enough data points to calculate standard error.");
+        return {
+            K_Ratio: 0,
+            K_Ratio_Scaled: 0
+        };
     }
 
     const standardError = Math.sqrt(sumSquaredResiduals / degreesOfFreedom);
@@ -325,6 +361,8 @@ export default function Dashboard() {
     const avgHoldTimeWin = winCount ? totalHoldTimeWin / winCount : 0;
     const avgHoldTimeLoss = lossCount ? totalHoldTimeLoss / lossCount : 0;
     const avgHoldTimeBreakEven = breakEvenCount ? totalHoldTimeBreakEven / breakEvenCount : 0;
+    const avgDailyVolume = dailyStats.length ? totalVolume / dailyStats.length :0;
+    const avgTradeVolume = totalVolume / totalTradeCount;
 
     const kellyCriterion = avgWinLossRatio ? (winRate / 100) - ((1 - (winRate / 100) / avgWinLossRatio)) : 0;
     const suggestedShareSize = kellyCriterion > 0 ? balance * kellyCriterion / 100 : 0;
@@ -334,6 +372,18 @@ export default function Dashboard() {
 
 
     const performanceScore = calculatePerformanceScore(profitFactorScaled, winRate, avgWinLossRatioScaled, riskScore.Sortino_Ratio_Scaled, consistencyScore.K_Ratio_Scaled);
+    const testScores = dailyStats.map((daily) => {
+        return (
+            {
+                date: daily.date,
+                profitFactor: daily.scores.profitFactor,
+                winRate: daily.scores.winRate,
+                overall: daily.scores.overall,
+                consistency: daily.scores.consistency,
+                avgWinLoss: daily.scores.avgWinLoss,
+                riskManagement: daily.scores.riskManagement
+            });
+    });
     const scoreData = [
         {
             factor: "Win Rate",
@@ -384,55 +434,72 @@ export default function Dashboard() {
                     <DailyPnlWidget chartData={dailyStats} unit={unit} />
                 </div>
                 <div className={"col-span-4"}>
-                    <div className="">
-                        <Table>
-                            <TableBody>
-                                <TableRow>
-                                    <TableCell className={"w-0 whitespace-nowrap"}>Hold Time (Minute)</TableCell>
-                                    <TableCell>
-                                        <StatsWidget left={avgHoldTimeWin} right={avgHoldTimeLoss}
-                                                     mid={avgHoldTimeBreakEven}
-                                                     formatter={(v: any) => `${(v < 60 ? "<1" : (v / 60).toFixed(0))}`} />
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell className={"w-0 whitespace-nowrap"}>Largest Gain/Loss</TableCell>
-                                    <TableCell>
-                                        <StatsWidget left={largestGain} right={Math.abs(largestLoss)}
-                                                     formatter={(v: any) => `${FormatUnit(v, unit)}`} />
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell className={"w-0 whitespace-nowrap"}>Max Consecutive Win/Loss</TableCell>
-                                    <TableCell>
-                                        <StatsWidget left={maxConsecutiveWins} right={maxConsecutiveLoss} />
-                                    </TableCell>
-                                </TableRow>
+                    <Card className="border w-full h-full">
+                        <CardContent>
+                            <Table>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell className={"w-0 whitespace-nowrap"}>Hold Time (Minute)</TableCell>
+                                        <TableCell>
+                                            <StatsWidget left={avgHoldTimeWin} right={avgHoldTimeLoss}
+                                                         mid={avgHoldTimeBreakEven}
+                                                         formatter={(v: any) => `${(v < 60 ? "<1" : (v / 60).toFixed(0))}`} />
+                                        </TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell className={"w-0 whitespace-nowrap"}>Largest Gain/Loss</TableCell>
+                                        <TableCell>
+                                            <StatsWidget left={largestGain} right={Math.abs(largestLoss)}
+                                                         formatter={(v: any) => `${FormatUnit(v, unit)}`} />
+                                        </TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell className={"w-0 whitespace-nowrap"}>Max Consecutive
+                                            Win/Loss</TableCell>
+                                        <TableCell>
+                                            <StatsWidget left={maxConsecutiveWins} right={maxConsecutiveLoss} />
+                                        </TableCell>
+                                    </TableRow>
 
-                                <TableRow>
-                                    <TableCell className={"w-0 whitespace-nowrap"}>Avg Per Trade Gain/Loss</TableCell>
-                                    <TableCell>{FormatUnit(avgTradeGainLoss, unit)}</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell className={"w-0 whitespace-nowrap"}>Avg Per Share Gain/Loss</TableCell>
-                                    <TableCell>{FormatUnit(avgPerShareGainLoss, unit)}</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell className={"w-0 whitespace-nowrap"}>Commissions</TableCell>
-                                    <TableCell>{FormatUnit(totalCommission, unit)}</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell className={"w-0 whitespace-nowrap"}>Fees</TableCell>
-                                    <TableCell>{FormatUnit(totalFees, unit)}</TableCell>
-                                </TableRow>
+                                    <TableRow>
+                                        <TableCell className={"w-0 whitespace-nowrap"}>Avg Per Trade
+                                            Gain/Loss</TableCell>
+                                        <TableCell className={cn(avgTradeGainLoss > 0 && "text-foreground-green", avgTradeGainLoss < 0 && "text-foreground-red")}>{FormatUnit(avgTradeGainLoss, unit)}</TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell className={"w-0 whitespace-nowrap"}>Avg Per Share
+                                            Gain/Loss</TableCell>
+                                        <TableCell className={cn(avgPerShareGainLoss > 0 && "text-foreground-green", avgPerShareGainLoss < 0 && "text-foreground-red")}>{FormatUnit(avgPerShareGainLoss, unit)}</TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell className={"w-0 whitespace-nowrap"}>Avg Daily Volume</TableCell>
+                                        <TableCell>{avgDailyVolume}</TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell className={"w-0 whitespace-nowrap"}>Avg Volume Per Trade</TableCell>
+                                        <TableCell>{avgTradeVolume.toFixed()}</TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell className={"w-0 whitespace-nowrap"}>Commissions</TableCell>
+                                        <TableCell>{FormatUnit(totalCommission, unit)}</TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell className={"w-0 whitespace-nowrap"}>Fees</TableCell>
+                                        <TableCell>{FormatUnit(totalFees, unit)}</TableCell>
+                                    </TableRow>
 
-                            </TableBody>
-                        </Table>
-                    </div>
+                                </TableBody>
+                            </Table>
+
+                        </CardContent>
+                    </Card>
                 </div>
                 <div className="col-span-8">
                     <AdvancedCalendar dailyStats={dailyStats} unit={unit} isLoading={isLoading}
                                       profitTarget={profitTargets} />
+                </div>
+                <div className="col-span-12">
+                    <ScoreHistoryWidget chartData={testScores} />
                 </div>
             </div>
             {/*

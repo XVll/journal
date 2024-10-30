@@ -15,6 +15,7 @@ import {
 import { PnlType, Unit } from "../types";
 import { FormDescription } from "@/components/ui/form";
 import { useFilterStore } from "../hooks/use-filters";
+import { FilterDatePicker } from "@/features/filter/components/filter-date-picker";
 
 const filterSchema = z.object({
     unit: z.string(),
@@ -25,7 +26,7 @@ const filterSchema = z.object({
 });
 
 const Filter = () => {
-    const { pnlType, unit, setUnit, setPnlType } = useFilterStore();
+    const { pnlType, unit,dateRange,setDateRange, setUnit, setPnlType } = useFilterStore();
 
     const onSubmit = async () => {
         toast({
@@ -114,6 +115,7 @@ const Filter = () => {
                     </DropdownMenuCheckboxItem>
                 </DropdownMenuContent>
             </DropdownMenu>
+            <FilterDatePicker/>
 
 
         </div>

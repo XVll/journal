@@ -1,8 +1,8 @@
-"use client"
-import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
-import {FormatUnit} from "@/lib/helpers";
-import {cn} from "@/lib/utils";
-import {Unit} from "@/features/filter/types";
+"use client";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormatUnit } from "@/lib/helpers";
+import { cn } from "@/lib/utils";
+import { Unit } from "@/features/filter/types";
 
 interface PnlWidgetProps {
     pnl: number;
@@ -10,7 +10,7 @@ interface PnlWidgetProps {
     unit: Unit;
 }
 
-const PnlWidget = ({pnl, tradeCount, unit}: PnlWidgetProps) => {
+const PnlWidget = ({ pnl, tradeCount, unit }: PnlWidgetProps) => {
     return (
         <div className="h-full w-full">
             <Card className="w-full px-4 py-2">
@@ -19,8 +19,8 @@ const PnlWidget = ({pnl, tradeCount, unit}: PnlWidgetProps) => {
                 </CardHeader>
                 <CardContent className={"p-0"}>
                     <div
-                        className={cn("text-2xl font-bold", pnl > 0 && "text-foreground-green", pnl < 0 && "text-foreground-red",)}>{FormatUnit(pnl, unit)}
-                        <span className="text-xs text-muted-foreground"> {tradeCount} trades</span></div>
+                        className={cn("text-2xl font-bold", pnl > 0 && "text-foreground-green", pnl < 0 && "text-foreground-red")}>{FormatUnit(pnl, unit)}
+                        <span className="text-xs text-muted-foreground"> {tradeCount} Trade</span></div>
                 </CardContent>
             </Card>
         </div>
