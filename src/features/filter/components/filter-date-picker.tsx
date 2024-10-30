@@ -13,12 +13,10 @@ import {
     PopoverContent,
     PopoverTrigger
 } from "@/components/ui/popover";
+import { useFilterStore } from "@/features/filter/hooks/use-filters";
 
 export function FilterDatePicker({ className }: React.HTMLAttributes<HTMLDivElement>) {
-    const [date, setDate] = React.useState<DateRange | undefined>({
-        from: new Date(2022, 0, 20),
-        to: addDays(new Date(2022, 0, 20), 20)
-    });
+    const {dateRange: dateRange, setDateRange} = useFilterStore();
 
     return (
         <div className={cn("grid gap-2", className)}>
@@ -27,20 +25,21 @@ export function FilterDatePicker({ className }: React.HTMLAttributes<HTMLDivElem
                     <Button
                         id="date"
                         variant={"outline"}
+                        size={"sm"}
                         className={cn(
                             "w-[300px] justify-start text-left font-normal",
-                            !date && "text-muted-foreground"
+                            !dateRange && "text-muted-foreground"
                         )}
                     >
                         <CalendarIcon />
-                        {date?.from ? (
-                            date.to ? (
+                        {dateRange?.from ? (
+                            dateRange.to ? (
                                 <>
-                                    {format(date.from, "LLL dd, y")} -{" "}
-                                    {format(date.to, "LLL dd, y")}
+                                    {format(dateRange.from, "LLL dd, y")} -{" "}
+                                    {format(dateRange.to, "LLL dd, y")}
                                 </>
                             ) : (
-                                format(date.from, "LLL dd, y")
+                                format(dateRange.from, "LLL dd, y")
                             )
                         ) : (
                             <span>Pick a date</span>
@@ -51,9 +50,9 @@ export function FilterDatePicker({ className }: React.HTMLAttributes<HTMLDivElem
                     <Calendar
                         initialFocus
                         mode="range"
-                        defaultMonth={date?.from}
-                        selected={date}
-                        onSelect={setDate}
+                        defaultMonth={dateRange?.from}
+                        selected={dateRange}
+                        onSelect={setDateRange}
                         numberOfMonths={2}
                     />
                 </PopoverContent>

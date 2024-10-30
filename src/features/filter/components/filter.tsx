@@ -26,7 +26,7 @@ const filterSchema = z.object({
 });
 
 const Filter = () => {
-    const { pnlType, unit,dateRange,setDateRange, setUnit, setPnlType } = useFilterStore();
+    const { pnlType, unit,dateRange,setUnit, setPnlType } = useFilterStore();
 
     const onSubmit = async () => {
         toast({
@@ -35,7 +35,8 @@ const Filter = () => {
                 <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
                     <code className="text-white">{JSON.stringify({
                         pnlType: PnlType[pnlType],
-                        unitType: Unit[unit]
+                        unitType: Unit[unit],
+                        dateRange
                     }, null, 2)}</code>
                 </pre>
             )

@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import {create } from 'zustand';
 import {devtools} from 'zustand/middleware';
-import { DateRange, PnLRange, PnlType, Unit } from '../types';
+import {  PnLRange, PnlType, Unit } from '../types';
+import { DateRange } from "react-day-picker";
 
 const FilterSchema = z.object({
     dateRange: z
@@ -43,8 +44,8 @@ export interface FilterState {
     unit :Unit
     pnlType: PnlType;
     pnlRange: PnLRange;
-    dateRange: DateRange;
-    setDateRange: (dateRange: DateRange) => void;
+    dateRange?: DateRange;
+    setDateRange: (dateRange?: DateRange) => void;
     setPnlType: (pnlType: PnlType) => void;
     setUnit: (unit: Unit) => void;
     setPnlRange: (pnlRange: PnLRange) => void;
@@ -55,13 +56,13 @@ const useFilterStore = create<FilterState>()(
         pnlType: PnlType.Gross,
         unit: Unit.Currency,
         pnlRange: { min: undefined, max: undefined },
-        dateRange: { start: new Date(), end: new Date() },
+        dateRange: { from: undefined, to: undefined },
         setDateRange: (dateRange) => set((state) => ({ dateRange })),
         setPnlType: (pnlType) => set((state) => ({ pnlType })),
         setUnit: (unit) => set((state) => ({ unit })),
         setPnlRange: (pnlRange) => set((state) => ({ pnlRange })),
         resetFilters: () =>
-            set((state) => ({ pnlType: PnlType.Gross, pnlRange: { min: undefined, max: undefined }, dateRange: { start: undefined, end: undefined } })),
+            set((state) => ({ pnlType: PnlType.Gross, pnlRange: { min: undefined, max: undefined }, dateRange: {from :undefined, to:undefined} })),
     })),
 );
 export { useFilterStore , FilterSchema};

@@ -139,7 +139,9 @@ function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType
         const consistencyScore = calculateKRatioFromCumulativePnL(dailyPnlCumulative, 2);
         dailyStats.scores.winRate = result.winCount ? (result.winCount / (result.winCount + result.lossCount + result.breakEvenCount)) * 100 : 0;
         const profitFactor = result.sumOfLoss ? result.sumOfProfit / Math.abs(result.sumOfLoss) : result.sumOfProfit;
-        const avgWinLoss = (result.sumOfLoss / result.sumOfProfit) ? (result.sumOfProfit / result.winCount) / (result.sumOfLoss / result.lossCount) : (result.sumOfProfit / result.winCount);
+        const avgWinLoss = (result.sumOfLoss && result.lossCount && result.sumOfProfit && result.winCount)
+            ? (result.sumOfProfit / result.winCount) / (result.sumOfLoss / result.lossCount)
+            : (result.winCount ? result.sumOfProfit / result.winCount : 0);
         dailyStats.scores.riskManagement = riskScore.Sortino_Ratio_Scaled;
         dailyStats.scores.consistency = consistencyScore.K_Ratio_Scaled;
         dailyStats.scores.profitFactor = Math.min(profitFactor, 2) / 2 * 100;
@@ -209,7 +211,7 @@ const calculateSortinoRatio = (dailyPnLs: { date: Date, pnl: number }[], benchma
 function calculatePerformanceScore(pfScore: number, winRatio: number, avgWlsScore: number, rms: number, cs: number): number {
 
 
-    const FPS = 0.50 * pfScore + 0.10 * winRatio + 0.10 * avgWlsScore + 0.10 * rms + 0.30 * cs;
+    const FPS = 0.40 * pfScore + 0.10 * winRatio + 0.10 * avgWlsScore + 0.10 * rms + 0.30 * cs;
 
     return Math.max(0, Math.min(100, FPS));
 }
@@ -300,12 +302,73 @@ function calculateKRatioFromCumulativePnL(dailyPnLs: { date: Date; pnl: number }
 
 export default function Dashboard() {
     const { unit, pnlType } = useFilterStore();
-    const { data: trades, isLoading } = useGetCalendarDataQuery(new Date(2024, 9, 1));
-    // const trades = [
-    //     { pnl: -10, commission: 0,fees:0, result: TradeResult.Win, startDate: new Date(2024, 2, 1), averagePrice: 1.2, volume: 100 },
-    //     { pnl: 20, commission: 0,fees:0, result: TradeResult.Win, startDate: new Date(2024, 2, 2), averagePrice: 1.2, volume: 100 },
-    //     ];
-    // const isLoading = false;
+    // const { data: trades, isLoading } = useGetCalendarDataQuery(new Date(2024, 9, 1));
+    const trades = [
+        {
+            pnl: -29,
+            commission: 0,
+            fees: 0,
+            result: TradeResult.Loss,
+            startDate: new Date(2024, 9, 1),
+            averagePrice: 1.2,
+            volume: 100
+        },
+        {
+            pnl: 29,
+            commission: 0,
+            fees: 0,
+            result: TradeResult.Win,
+            startDate: new Date(2024, 9, 3),
+            averagePrice: 1.2,
+            volume: 100
+        },
+        {
+            pnl: -22,
+            commission: 0,
+            fees: 0,
+            result: TradeResult.Loss,
+            startDate: new Date(2024, 9, 4),
+            averagePrice: 1.2,
+            volume: 100
+        },
+        {
+            pnl: 30,
+            commission: 0,
+            fees: 0,
+            result: TradeResult.Win,
+            startDate: new Date(2024, 9, 7),
+            averagePrice: 1.2,
+            volume: 100
+        },
+        {
+            pnl: 10,
+            commission: 0,
+            fees: 0,
+            result: TradeResult.Win,
+            startDate: new Date(2024, 9, 8),
+            averagePrice: 1.2,
+            volume: 100
+        },
+        {
+            pnl: -32,
+            commission: 0,
+            fees: 0,
+            result: TradeResult.Loss,
+            startDate: new Date(2024, 9, 9),
+            averagePrice: 1.2,
+            volume: 100
+        },
+        {
+            pnl: 10,
+            commission: 0,
+            fees: 0,
+            result: TradeResult.Win,
+            startDate: new Date(2024, 9, 10),
+            averagePrice: 1.2,
+            volume: 100
+        }
+    ];
+    const isLoading = false;
 
     const balance = 25000;
     const risk = 1000;
@@ -361,7 +424,7 @@ export default function Dashboard() {
     const avgHoldTimeWin = winCount ? totalHoldTimeWin / winCount : 0;
     const avgHoldTimeLoss = lossCount ? totalHoldTimeLoss / lossCount : 0;
     const avgHoldTimeBreakEven = breakEvenCount ? totalHoldTimeBreakEven / breakEvenCount : 0;
-    const avgDailyVolume = dailyStats.length ? totalVolume / dailyStats.length :0;
+    const avgDailyVolume = dailyStats.length ? totalVolume / dailyStats.length : 0;
     const avgTradeVolume = totalVolume / totalTradeCount;
 
     const kellyCriterion = avgWinLossRatio ? (winRate / 100) - ((1 - (winRate / 100) / avgWinLossRatio)) : 0;
@@ -464,12 +527,14 @@ export default function Dashboard() {
                                     <TableRow>
                                         <TableCell className={"w-0 whitespace-nowrap"}>Avg Per Trade
                                             Gain/Loss</TableCell>
-                                        <TableCell className={cn(avgTradeGainLoss > 0 && "text-foreground-green", avgTradeGainLoss < 0 && "text-foreground-red")}>{FormatUnit(avgTradeGainLoss, unit)}</TableCell>
+                                        <TableCell
+                                            className={cn(avgTradeGainLoss > 0 && "text-foreground-green", avgTradeGainLoss < 0 && "text-foreground-red")}>{FormatUnit(avgTradeGainLoss, unit)}</TableCell>
                                     </TableRow>
                                     <TableRow>
                                         <TableCell className={"w-0 whitespace-nowrap"}>Avg Per Share
                                             Gain/Loss</TableCell>
-                                        <TableCell className={cn(avgPerShareGainLoss > 0 && "text-foreground-green", avgPerShareGainLoss < 0 && "text-foreground-red")}>{FormatUnit(avgPerShareGainLoss, unit)}</TableCell>
+                                        <TableCell
+                                            className={cn(avgPerShareGainLoss > 0 && "text-foreground-green", avgPerShareGainLoss < 0 && "text-foreground-red")}>{FormatUnit(avgPerShareGainLoss, unit)}</TableCell>
                                     </TableRow>
                                     <TableRow>
                                         <TableCell className={"w-0 whitespace-nowrap"}>Avg Daily Volume</TableCell>
