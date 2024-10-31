@@ -11,7 +11,7 @@ import qs from "qs";
 import { Trade } from "@prisma/client";
 import { DateRange } from "react-day-picker";
 
-export const useGetCalendarDataQuery = () => {
+export const useGetCalendarDataQuery = (dateRange:DateRange | undefined) => {
 
     const filters = useFilterStore((state) => state);
     const query = qs.stringify({
@@ -22,7 +22,7 @@ export const useGetCalendarDataQuery = () => {
 
     return useQuery<Trade[], Error>({
         staleTime: 1000 * 60 * 5,
-        queryKey: ["trades-get"],
+        queryKey: ["trades-get", dateRange],
         queryFn: async () => {
             const res = await rpc.api.trade.trades.$get({
                 query: {

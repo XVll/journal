@@ -1,20 +1,13 @@
+
 # You add custom tagging
     * You can tag trades with Eg: Setup Time frame, Strategy and view charts with these tags for both distribution and performance
 
 # On Day View:
-    * Daily Area Chart which shows Daily PnL
-    * Total Trades Count
-    * Daily Winning/Losing/Breakeven Trade % and count
-    * Total PnL
-    * Total Commission/Fees
-    * Total Volume
-    * Daily Profit Factor
     * List of trades with OpenTime, Ticker, Side, PnL, ROI, R-Multiple, Tags as columns
     * You can add notes to each day and make them visible on calendar.
 
 # On Trade View:
     * List of Trades with OpenDate, CloseDate, Ticker,Status, Entry Price, Exit Price, Side, PnL, ROI, R-Multiple, Tags, Fx Score as columns
-
 # Reports
     * Avg Daily Volume Int
     * Cumulative Drowdown

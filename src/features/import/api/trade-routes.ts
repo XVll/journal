@@ -35,8 +35,8 @@ const app = new Hono()
         const parsedFilter = qs.parse(query);
         const filters = FilterSchema.parse(parsedFilter);
 
-        const startDate = startOfMonth(filters?.selectedCalendarDate || new Date());
-        const endDate = endOfMonth(filters?.selectedCalendarDate || new Date());
+        const startDate = filters?.dateRange?.from || startOfMonth(new Date());
+        const endDate = filters?.dateRange?.to || endOfMonth(new Date());
 
         const trades = await db.trade.findMany({
             where: {
@@ -46,10 +46,6 @@ const app = new Hono()
                 },
             },
             //where: {
-            //  startDate: {
-            //    gte: new Date(2024, 9, 1),
-            //     lt: new Date(2024, 10, 1),
-            //   },
             // ticker: { contains: "AAPL" },
             // status: TradeStatus.Closed,
             // account: "Cash",

@@ -63,6 +63,7 @@ model Trade {
   result        TradeResult?
   executionTime Int?
   notes         String?
+  tags          String[]
   executions    Execution[]
 }
 

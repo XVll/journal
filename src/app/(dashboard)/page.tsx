@@ -19,6 +19,74 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScoreHistoryWidget } from "@/features/widgets/components/score-history";
 import { cn } from "@/lib/utils";
 
+function calculateKestnerRatio(dailyPnl: {date:Date, pnl:number}[]): number {
+    if (dailyPnl.length === 0) {
+        return 0;
+    }
+
+    // Regression Calculation
+    let averageX = 0.0;
+    let averageY = 0.0;
+    let covariance = 0.0;
+    const seriesX: number[] = [];
+    const seriesY: number[] = [];
+    const count = dailyPnl.length;
+
+    // Calculate slopeStep as the average of item values
+    const slopeStep = dailyPnl.reduce((sum, item) => sum + item.pnl, 0) / count;
+    let slope = 0.0;
+
+    // Populate seriesX and seriesY, and compute sums for averages
+    for (let i = 0; i < count; i++) {
+        slope += slopeStep;
+        averageX += dailyPnl[i].pnl;
+        averageY += slope;
+        seriesX.push(dailyPnl[i].pnl);
+        seriesY.push(slope);
+    }
+
+    // Compute averages
+    averageX /= count;
+    averageY /= count;
+
+    // Calculate deviations and covariance
+    let devX = 0.0;
+    let devY = 0.0;
+
+    for (let i = 0; i < count; i++) {
+        const x = seriesX[i] - averageX;
+        const y = seriesY[i] - averageY;
+
+        devX += x * x;
+        devY += y * y;
+        covariance += x * y;
+    }
+
+    covariance /= count;
+    devX = Math.sqrt(devX / count);
+    devY = Math.sqrt(devY / count);
+
+    // Prevent division by zero in correlation calculation
+    let deviation = devX * devY;
+    if (deviation === 0) {
+        deviation = 1.0;
+    }
+
+    const correlation = covariance / deviation;
+
+
+    // Kestner Ratio Calculation
+    const slopeResult = covariance / devY;
+    let error = count > 1 ? Math.sqrt(devY / (count - 1)) : 1.0;
+
+    // Prevent division by zero in error calculation
+    if (error === 0 || isNaN(error)) {
+        error = 1.0;
+    }
+
+    return slopeResult / error;
+}
+
 function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType, unit: Unit, risk: number = 1, percentageRisk: number = 1) {
     trades?.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 
@@ -307,8 +375,8 @@ function calculateKRatioFromCumulativePnL(dailyPnLs: { date: Date; pnl: number }
 }
 
 export default function Dashboard() {
-    const { unit, pnlType } = useFilterStore();
-    const { data: trades, isLoading } = useGetCalendarDataQuery();
+    const { unit, pnlType, dateRange } = useFilterStore();
+    const { data: trades, isLoading } = useGetCalendarDataQuery(dateRange);
     //     const trades = [
     //         { pnl: 1, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 1), averagePrice: 1.2, volume: 100 },
     //         { pnl: 2, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 3), averagePrice: 1.2, volume: 100 },
@@ -406,6 +474,9 @@ export default function Dashboard() {
     const dailyPnlCumulative = calculateCumulativeDailyPnl(dailyStats);
     const riskScore = calculateSortinoRatio(dailyStats, riskScoreBenchmark);
     const consistencyScore = calculateKRatioFromCumulativePnL(dailyPnlCumulative, consistencyScoreBenchmark);
+    const k_ratio = calculateKestnerRatio(dailyStats);
+    console.log("New K Ratio", k_ratio);
+    console.log("Old K Ratio", consistencyScore.K_Ratio);
 
 
     const totalTradeCount = winCount + lossCount + breakEvenCount;
@@ -475,7 +546,6 @@ export default function Dashboard() {
     ];
 
 
-    console.log(largestLoss);
 
     return (
         <div className="pt-2">
