@@ -25,7 +25,7 @@ import {Unit} from "@/features/filter/types";
 const chartConfig = {
     factor: {
         label: "Value",
-        color: "hsl(var(--chart-1))",
+        color: "hsl(var(--blue))",
     },
 } satisfies ChartConfig
 

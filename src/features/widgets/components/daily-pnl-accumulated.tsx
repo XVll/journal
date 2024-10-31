@@ -12,7 +12,7 @@ import { FormatUnit } from "@/lib/helpers";
 const chartConfig = {
     pnl: {
         label: "PnL",
-        color: "hsl(var(--chart-1))"
+        color: "hsl(var(--blue))"
     }
 } satisfies ChartConfig;
 
@@ -42,7 +42,7 @@ export function DailyPnlAccumulatedWidget({ chartData, unit }: DailyPnlAccumulat
                                 <stop offset="95%" stopColor="var(--color-pnl)" stopOpacity={0.1} />
                             </linearGradient>
                         </defs>
-                        <Area dataKey="pnl" type="natural" fill="url(#fillpnl)" fillOpacity={0.4}
+                        <Area dataKey="pnl" type="monotone" fill="url(#fillpnl)" fillOpacity={0.4}
                               stroke="var(--color-pnl)" stackId="a" />
                     </AreaChart>
                 </ChartContainer>

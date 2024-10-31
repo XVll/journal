@@ -9,20 +9,20 @@ import { TradeWithExecutions } from "@/features/import/types";
 import { useFilterStore } from "../../filter/hooks/use-filters";
 import qs from "qs";
 import { Trade } from "@prisma/client";
+import { DateRange } from "react-day-picker";
 
-export const useGetCalendarDataQuery = (date:Date) => {
+export const useGetCalendarDataQuery = () => {
 
     const filters = useFilterStore((state) => state);
     const query = qs.stringify({
         dateRange: filters.dateRange,
         pnlType: filters.pnlType,
         pnlRange: filters.pnlRange,
-        selectedCalendarDate: date
     });
 
     return useQuery<Trade[], Error>({
         staleTime: 1000 * 60 * 5,
-        queryKey: ["trades-get", date],
+        queryKey: ["trades-get"],
         queryFn: async () => {
             const res = await rpc.api.trade.trades.$get({
                 query: {

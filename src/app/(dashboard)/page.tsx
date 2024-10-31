@@ -5,7 +5,6 @@ import { PnlType, Unit } from "@/features/filter/types";
 import AvgWinLossWidget from "@/features/widgets/components/avg-win-loss";
 import { DailyPnlWidget } from "@/features/widgets/components/daily-pnl";
 import { DailyPnlAccumulatedWidget } from "@/features/widgets/components/daily-pnl-accumulated";
-import ExpectancyWidget from "@/features/widgets/components/expectancy";
 import { FxScoreWidget } from "@/features/widgets/components/fx-score";
 import PnlWidget from "@/features/widgets/components/pnl-widget";
 import { ProfitFactorWidget } from "@/features/widgets/components/profit-factor-widget";
@@ -137,11 +136,20 @@ function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType
         const dailyPnlCumulative = calculateCumulativeDailyPnl(Array.from(Object.values(dailyStatsMap)));
         const riskScore = calculateSortinoRatio(dailyPnlCumulative, 2);
         const consistencyScore = calculateKRatioFromCumulativePnL(dailyPnlCumulative, 2);
-        dailyStats.scores.winRate = result.winCount ? (result.winCount / (result.winCount + result.lossCount + result.breakEvenCount)) * 100 : 0;
         const profitFactor = result.sumOfLoss ? result.sumOfProfit / Math.abs(result.sumOfLoss) : result.sumOfProfit;
         const avgWinLoss = (result.sumOfLoss && result.lossCount && result.sumOfProfit && result.winCount)
             ? (result.sumOfProfit / result.winCount) / (result.sumOfLoss / result.lossCount)
             : (result.winCount ? result.sumOfProfit / result.winCount : 0);
+        if (Array.from(Object.values(dailyStatsMap)).length <= 2) {
+            dailyStats.scores.winRate = 0;
+            dailyStats.scores.riskManagement = 0;
+            dailyStats.scores.consistency = 0;
+            dailyStats.scores.profitFactor = 0;
+            dailyStats.scores.avgWinLoss = 0;
+            dailyStats.scores.overall = 0;
+            return;
+        }
+        dailyStats.scores.winRate = result.winCount ? (result.winCount / (result.winCount + result.lossCount + result.breakEvenCount)) * 100 : 0;
         dailyStats.scores.riskManagement = riskScore.Sortino_Ratio_Scaled;
         dailyStats.scores.consistency = consistencyScore.K_Ratio_Scaled;
         dailyStats.scores.profitFactor = Math.min(profitFactor, 2) / 2 * 100;
@@ -256,7 +264,6 @@ function calculateKRatioFromCumulativePnL(dailyPnLs: { date: Date; pnl: number }
     }
 
     if (denominator === 0) {
-        // throw new Error("Variance of time periods is zero; cannot perform linear regression.");
         return {
             K_Ratio: 0,
             K_Ratio_Scaled: 0
@@ -276,7 +283,6 @@ function calculateKRatioFromCumulativePnL(dailyPnLs: { date: Date; pnl: number }
 
     const degreesOfFreedom = n - 2;
     if (degreesOfFreedom <= 0) {
-        // throw new Error("Not enough data points to calculate standard error.");
         return {
             K_Ratio: 0,
             K_Ratio_Scaled: 0
@@ -302,17 +308,66 @@ function calculateKRatioFromCumulativePnL(dailyPnLs: { date: Date; pnl: number }
 
 export default function Dashboard() {
     const { unit, pnlType } = useFilterStore();
-     const { data: trades, isLoading } = useGetCalendarDataQuery(new Date(2024, 9, 1));
-    // const trades = [
-    //     { pnl: -5, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 9, 1), averagePrice: 1.2, volume: 100 },
-    //     { pnl: -4, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 9, 3), averagePrice: 1.2, volume: 100 },
-    //     { pnl: -3, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 9, 4), averagePrice: 1.2, volume: 100 },
-    //     { pnl: 2, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 7), averagePrice: 1.2, volume: 100 },
-    //     { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 8), averagePrice: 1.2, volume: 100 },
-    //     { pnl: 4, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 9), averagePrice: 1.2, volume: 100 },
-    //     { pnl: 5, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 10), averagePrice: 1.2, volume: 100 }
-    // ];
-    // const isLoading = false;
+    const { data: trades, isLoading } = useGetCalendarDataQuery();
+    //     const trades = [
+    //         { pnl: 1, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 1), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 2, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 3), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 4), averagePrice: 1.2, volume: 100 },
+    //         { pnl: -5, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 9, 7), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 8), averagePrice: 1.2, volume: 100 },
+    //         { pnl: -1, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 9, 9), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 5, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 10), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 1, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 11), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 2, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 13), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 14), averagePrice: 1.2, volume: 100 },
+    //         { pnl: -5, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 9, 17), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 18), averagePrice: 1.2, volume: 100 },
+    //         { pnl: -1, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 9, 19), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 5, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 20), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 1, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 10, 1), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 2, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 10, 3), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 10, 4), averagePrice: 1.2, volume: 100 },
+    //         { pnl: -5, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 10, 7), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 10, 8), averagePrice: 1.2, volume: 100 },
+    //         { pnl: -1, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 10, 9), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 5, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 10, 10), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 1, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 10, 11), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 2, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 10, 13), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 10, 14), averagePrice: 1.2, volume: 100 },
+    //         { pnl: -5, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 10, 17), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 10, 18), averagePrice: 1.2, volume: 100 },
+    //         { pnl: -1, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 10, 19), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 5, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 10, 20), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 1, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 8, 1), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 2, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 8, 3), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 8, 4), averagePrice: 1.2, volume: 100 },
+    //         { pnl: -5, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 8, 7), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 8, 8), averagePrice: 1.2, volume: 100 },
+    //         { pnl: -1, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 8, 9), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 5, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 8, 10), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 1, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 8, 11), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 2, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 8, 13), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 8, 14), averagePrice: 1.2, volume: 100 },
+    //         { pnl: -15, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 8, 17), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 8, 18), averagePrice: 1.2, volume: 100 },
+    //         { pnl: -1, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 8, 19), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 5, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 8, 20), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 1, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 11, 1), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 2, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 11, 3), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 11, 4), averagePrice: 1.2, volume: 100 },
+    //         { pnl: -20, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 11, 7), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 11, 8), averagePrice: 1.2, volume: 100 },
+    //         { pnl: -1, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 11, 9), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 5, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 11, 10), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 1, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 11, 11), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 2, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 11, 13), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 11, 14), averagePrice: 1.2, volume: 100 },
+    //         { pnl: -5, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 11, 17), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 11, 18), averagePrice: 1.2, volume: 100 },
+    //         { pnl: -1, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 11, 19), averagePrice: 1.2, volume: 100 },
+    //         { pnl: 5, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 11, 20), averagePrice: 1.2, volume: 100 }
+    //     ];
+    //     const isLoading = false;
 
     const balance = 25000;
     const risk = 1000;
@@ -378,7 +433,7 @@ export default function Dashboard() {
     const avgWinLossRatioScaled = Math.min(avgWinLossRatio, avgWinLossRatioBenchmark) / avgWinLossRatioBenchmark * 100;
 
 
-    const performanceScore = calculatePerformanceScore(profitFactorScaled, winRate, avgWinLossRatioScaled, riskScore.Sortino_Ratio_Scaled, consistencyScore.K_Ratio_Scaled);
+    let performanceScore = calculatePerformanceScore(profitFactorScaled, winRate, avgWinLossRatioScaled, riskScore.Sortino_Ratio_Scaled, consistencyScore.K_Ratio_Scaled);
     const testScores = dailyStats.map((daily) => {
         return (
             {
@@ -507,7 +562,7 @@ export default function Dashboard() {
                     <AdvancedCalendar dailyStats={dailyStats} unit={unit} isLoading={isLoading}
                                       profitTarget={profitTargets} />
                 </div>
-                <div className="col-span-12">
+                <div className="col-span-4">
                     <ScoreHistoryWidget chartData={testScores} />
                 </div>
             </div>

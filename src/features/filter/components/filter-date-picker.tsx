@@ -14,6 +14,7 @@ import {
     PopoverTrigger
 } from "@/components/ui/popover";
 import { useFilterStore } from "@/features/filter/hooks/use-filters";
+import { Separator } from "@/components/ui/separator";
 
 export function FilterDatePicker({ className }: React.HTMLAttributes<HTMLDivElement>) {
     const {dateRange: dateRange, setDateRange} = useFilterStore();
@@ -47,14 +48,26 @@ export function FilterDatePicker({ className }: React.HTMLAttributes<HTMLDivElem
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                        initialFocus
-                        mode="range"
-                        defaultMonth={dateRange?.from}
-                        selected={dateRange}
-                        onSelect={setDateRange}
-                        numberOfMonths={2}
-                    />
+                    <div className={"flex"}>
+                        <div className={"flex flex-col px-4 py-2 gap-1"}>
+                            <Button onClick={(e) => setDateRange(e)} variant={"ghost"}>Today</Button>
+                            <Button variant={"ghost"}>Yesterday</Button>
+                            <Button variant={"ghost"}>Last 7 days</Button>
+                            <Button variant={"ghost"}>Last 30 days</Button>
+                        </div>
+                        <div className={""}>
+                            <Separator orientation={"vertical"} className={""} />
+                        </div>
+                        <Calendar
+                            initialFocus
+                            mode="range"
+                            defaultMonth={dateRange?.from}
+                            selected={dateRange}
+                            onSelect={setDateRange}
+                            numberOfMonths={2}
+                        />
+
+                    </div>
                 </PopoverContent>
             </Popover>
         </div>
