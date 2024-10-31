@@ -302,73 +302,17 @@ function calculateKRatioFromCumulativePnL(dailyPnLs: { date: Date; pnl: number }
 
 export default function Dashboard() {
     const { unit, pnlType } = useFilterStore();
-    // const { data: trades, isLoading } = useGetCalendarDataQuery(new Date(2024, 9, 1));
-    const trades = [
-        {
-            pnl: -29,
-            commission: 0,
-            fees: 0,
-            result: TradeResult.Loss,
-            startDate: new Date(2024, 9, 1),
-            averagePrice: 1.2,
-            volume: 100
-        },
-        {
-            pnl: 29,
-            commission: 0,
-            fees: 0,
-            result: TradeResult.Win,
-            startDate: new Date(2024, 9, 3),
-            averagePrice: 1.2,
-            volume: 100
-        },
-        {
-            pnl: -22,
-            commission: 0,
-            fees: 0,
-            result: TradeResult.Loss,
-            startDate: new Date(2024, 9, 4),
-            averagePrice: 1.2,
-            volume: 100
-        },
-        {
-            pnl: 30,
-            commission: 0,
-            fees: 0,
-            result: TradeResult.Win,
-            startDate: new Date(2024, 9, 7),
-            averagePrice: 1.2,
-            volume: 100
-        },
-        {
-            pnl: 10,
-            commission: 0,
-            fees: 0,
-            result: TradeResult.Win,
-            startDate: new Date(2024, 9, 8),
-            averagePrice: 1.2,
-            volume: 100
-        },
-        {
-            pnl: -32,
-            commission: 0,
-            fees: 0,
-            result: TradeResult.Loss,
-            startDate: new Date(2024, 9, 9),
-            averagePrice: 1.2,
-            volume: 100
-        },
-        {
-            pnl: 10,
-            commission: 0,
-            fees: 0,
-            result: TradeResult.Win,
-            startDate: new Date(2024, 9, 10),
-            averagePrice: 1.2,
-            volume: 100
-        }
-    ];
-    const isLoading = false;
+     const { data: trades, isLoading } = useGetCalendarDataQuery(new Date(2024, 9, 1));
+    // const trades = [
+    //     { pnl: -5, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 9, 1), averagePrice: 1.2, volume: 100 },
+    //     { pnl: -4, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 9, 3), averagePrice: 1.2, volume: 100 },
+    //     { pnl: -3, commission: 0, fees: 0, result: TradeResult.Loss, startDate: new Date(2024, 9, 4), averagePrice: 1.2, volume: 100 },
+    //     { pnl: 2, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 7), averagePrice: 1.2, volume: 100 },
+    //     { pnl: 3, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 8), averagePrice: 1.2, volume: 100 },
+    //     { pnl: 4, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 9), averagePrice: 1.2, volume: 100 },
+    //     { pnl: 5, commission: 0, fees: 0, result: TradeResult.Win, startDate: new Date(2024, 9, 10), averagePrice: 1.2, volume: 100 }
+    // ];
+    // const isLoading = false;
 
     const balance = 25000;
     const risk = 1000;
