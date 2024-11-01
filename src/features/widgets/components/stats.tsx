@@ -13,10 +13,11 @@ import {
 } from "@/components/ui/card";
 import {
     ChartConfig,
-    ChartContainer
+    ChartContainer, ChartTooltip, ChartTooltipContent
 } from "@/components/ui/chart";
 import { Berkshire_Swash } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { FormatUnit } from "@/lib/helpers";
 
 
 const chartConfig = {
@@ -34,6 +35,18 @@ const chartConfig = {
     },
     label: {
         color: "hsl(var(--f2))"
+    },
+    leftP: {
+        label: "Left",
+        color: "hsl(var(--green-bg))"
+    },
+    midP: {
+        label: "Middle",
+        color: "hsl(var(--blue-bg))"
+    },
+    rightP: {
+        label: "Right",
+        color: "hsl(var(--red bg))"
     }
 } satisfies ChartConfig;
 
@@ -59,6 +72,7 @@ export function StatsWidget({ left, mid, right, formatter }: StatsWidgetProps) {
         <div className="h-full w-full ">
             <ChartContainer config={chartConfig} className="w-full h-5">
                 <BarChart layout="vertical" data={[chartData]} margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
+                    <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
                     <XAxis type="number" tickLine={false} axisLine={false} hide className="w-full" />
                     <YAxis type="category" hide />
                     {
