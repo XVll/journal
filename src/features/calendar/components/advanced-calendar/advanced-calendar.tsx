@@ -19,6 +19,7 @@ import {
 import { useEffect } from "react";
 import { Unit } from "@/features/filter/types";
 import { DailyStats, ProfitTarget } from "@/features/calendar/types";
+import { useUIStore } from "@/hooks/use-ui-settings";
 
 
 const modifiers = (dailyStats: Record<string, DailyStats>) => {
@@ -37,8 +38,9 @@ interface AdvancedCalendarProps {
     profitTarget: ProfitTarget
 }
 
-function AdvancedCalendar({ dailyStats, unit, isLoading , profitTarget}: AdvancedCalendarProps) {
+function AdvancedCalendar({ dailyStats, unit, isLoading, profitTarget }: AdvancedCalendarProps) {
     const [selectedCalendarDate, setSelectedCalendarDate] = React.useState(new Date());
+    const { setDailyDrawerOpen } = useUIStore();
 
     let dayStats = generateDailyCalendarStats(dailyStats, selectedCalendarDate);
     const weekStats = generateWeeklyCalendarStats(dayStats, selectedCalendarDate);
@@ -52,6 +54,9 @@ function AdvancedCalendar({ dailyStats, unit, isLoading , profitTarget}: Advance
         <div className="relative grid grid-cols-8 border p-2 rounded-xl">
             <AdvancedCalendarBase
                 className="col-span-7"
+                onDayClick={(date) => {
+                    setDailyDrawerOpen(true,date);
+                }}
                 onMonthChange={setSelectedCalendarDate}
                 modifiers={modifiers(dayStats)}
                 modifiersClassNames={{

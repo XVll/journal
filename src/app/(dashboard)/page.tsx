@@ -18,6 +18,7 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScoreHistoryWidget } from "@/features/widgets/components/score-history";
 import { cn } from "@/lib/utils";
+import DailyTradesView from "@/app/(dashboard)/_components/daily-trades-view";
 
 function calculateKestnerRatio(dailyPnl: {date:Date, pnl:number}[]): number {
     if (dailyPnl.length === 0) {
@@ -635,6 +636,7 @@ export default function Dashboard() {
                 <div className="col-span-4">
                     <ScoreHistoryWidget chartData={testScores} />
                 </div>
+                <DailyTradesView/>
             </div>
             {/*
             
