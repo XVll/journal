@@ -70,7 +70,7 @@ export function ScoreHistoryWidget({ chartData }: ScoreHistoryWidgetProps) {
                             tickMargin={8}
                             tickFormatter={(value) => value.toLocaleDateString()}
                         />
-                        <YAxis tickLine={false} axisLine={false} width={16}/>
+                        <YAxis tickLine={false} axisLine={false} width={20} />
                         <Legend verticalAlign="top" height={32}  layout={"horizontal"} iconSize={12}
                                 formatter={(value) => {
                                     return chartConfig[value as keyof typeof chartConfig].label;

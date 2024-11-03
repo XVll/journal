@@ -1,5 +1,14 @@
 import { ExecutionInput } from "@/features/import/types";
-import { Execution, Prisma, ScalingAction, TradeAction, TradeDirection, TradeResult, TradeStatus, TradeType } from "@prisma/client";
+import {
+    Execution,
+    Prisma,
+    ScalingAction,
+    TradeAction,
+    TradeDirection,
+    TradeResult,
+    TradeStatus,
+    TradeType
+} from "@prisma/client";
 import { createHash } from "crypto";
 
 function CalculateCommission(execution: ExecutionInput) {
@@ -36,7 +45,7 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
             acc[execution.ticker].push(execution);
             return acc;
         },
-        {} as Record<string, ExecutionInput[]>,
+        {} as Record<string, ExecutionInput[]>
     );
 
     const trades = [];
@@ -66,7 +75,7 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                 commission: CalculateCommission(firstExecutionInput),
                 fees: CalculateFees(firstExecutionInput),
                 amount: firstExecutionInput.price * firstExecutionInput.quantity,
-                executionHash: createExecutionId(firstExecutionInput),
+                executionHash: createExecutionId(firstExecutionInput)
             };
 
             const trade: Prisma.TradeUncheckedCreateWithoutExecutionsInput & {
@@ -82,13 +91,15 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                 averagePrice: firstExecution.price,
                 commission: firstExecution.commission,
                 fees: firstExecution.fees,
-                pnl: firstExecution.pnl,
+                pnlNet: firstExecution.pnl,
+                pnlGross: firstExecution.pnl + firstExecution.commission + firstExecution.fees,
                 status: TradeStatus.Open,
                 notes: null,
                 endDate: null,
                 executionTime: null,
-                result: null,
-                executions: [],
+                resultNet: null,
+                resultGross: null,
+                executions: []
             };
 
             trade.executions.push(firstExecution);
@@ -111,7 +122,7 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                     commission: CalculateCommission(executionInput),
                     fees: CalculateFees(executionInput),
                     executionHash: createExecutionId(executionInput),
-                    amount: executionInput.price * executionInput.quantity,
+                    amount: executionInput.price * executionInput.quantity
                 };
                 if (trade.direction === TradeDirection.Long) {
                     let executionQuantity = execution.quantity || 0;
@@ -135,17 +146,17 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                     } else if (execution.action === TradeAction.Sell) {
                         trade.openPosition -= executionQuantity;
                         if (!execution.pnl) {
-                            trade.pnl += (execution.price - trade.averagePrice) * executionQuantity;
+                            trade.pnlNet += (execution.price - trade.averagePrice) * executionQuantity;
                             execution.pnl = (execution.price - trade.averagePrice) * executionQuantity;
-                        } else trade.pnl += execution.pnl;
+                        } else trade.pnlNet += execution.pnl;
                     }
 
                     execution.scalingAction =
                         execution.action === TradeAction.Buy
                             ? ScalingAction.ScaleIn
                             : execution.price > trade.averagePrice
-                              ? ScalingAction.ProfitTaking
-                              : ScalingAction.StopLoss;
+                                ? ScalingAction.ProfitTaking
+                                : ScalingAction.StopLoss;
 
                     execution.tradePosition = trade.openPosition;
                     execution.avgPrice = trade.averagePrice;
@@ -172,17 +183,17 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                     } else if (execution.action === TradeAction.Buy) {
                         trade.openPosition -= executionQuantity;
                         if (!execution.pnl) {
-                            trade.pnl += (trade.averagePrice - execution.price) * executionQuantity;
+                            trade.pnlNet += (trade.averagePrice - execution.price) * executionQuantity;
                             execution.pnl = (trade.averagePrice - execution.price) * executionQuantity;
-                        } else trade.pnl += execution.pnl;
+                        } else trade.pnlNet += execution.pnl;
                     }
 
                     execution.scalingAction =
                         execution.action === TradeAction.Sell
                             ? ScalingAction.ScaleIn
                             : execution.price < trade.averagePrice
-                              ? ScalingAction.ProfitTaking
-                              : ScalingAction.StopLoss;
+                                ? ScalingAction.ProfitTaking
+                                : ScalingAction.StopLoss;
 
                     execution.tradePosition = trade.openPosition;
                     execution.avgPrice = trade.averagePrice;
@@ -191,7 +202,9 @@ export default async function CreateTrades(inputs: ExecutionInput[], account: st
                 if (execution.tradePosition === 0) {
                     trade.endDate = execution.date;
                     trade.executionTime = (new Date(trade.endDate).getTime() - new Date(trade.startDate).getTime()) / 1000;
-                    trade.result = trade.pnl > 0 ? TradeResult.Win : trade.pnl < 0 ? TradeResult.Loss : TradeResult.BreakEven;
+                    trade.resultNet = trade.pnlNet > 0 ? TradeResult.Win : trade.pnlNet < 0 ? TradeResult.Loss : TradeResult.BreakEven;
+                    trade.resultGross = trade.pnlGross > 0 ? TradeResult.Win : trade.pnlGross < 0 ? TradeResult.Loss : TradeResult.BreakEven;
+                    trade.pnlGross = trade.pnlNet + trade.commission + trade.fees;
                     trade.status = TradeStatus.Closed;
                     trade.executions.push(execution);
                     break;

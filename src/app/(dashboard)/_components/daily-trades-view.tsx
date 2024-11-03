@@ -15,56 +15,20 @@ import { StatsWidget } from "@/features/widgets/components/stats";
 import { FormatUnit } from "@/lib/helpers";
 import { cn } from "@/lib/utils";
 import { Unit } from "@/features/filter/types";
+import { DailyStats } from "@/features/calendar/types";
 
-const DailyTradesView = () => {
+interface DailyTradesViewProps {
+    dailyStats?: DailyStats;
+}
+
+const DailyTradesView = ({ dailyStats }: DailyTradesViewProps) => {
     const { dailyDrawerOpen, setDailyDrawerOpen, dailyDrawerDate } = useUIStore();
-    const dailyStats = {
-        pnl: 1000,
-        winCount: 6,
-        lossCount: 2,
-        breakEvenCount: 2,
-        profitFactor: 2,
-        avgHoldTimeWin: 20,
-        avgHoldTimeLoss: 10,
-        avgHoldTimeBreakEven: 5,
-        largestGain: 2000,
-        largestLoss: 1100,
-        maxConsecutiveWins: 9,
-        maxConsecutiveLoss: 3,
-        avgTradeGainLoss: 22,
-        avgPerShareGainLoss: 10,
-        avgDailyVolume: 3500,
-        avgTradeVolume: 2000,
-        totalCommission: 100,
-        totalFees: 200,
-        unit: Unit.Currency
-    };
-    const dailyTrades: Trade[] = [
-        {
-            id: "1",
-            account: "1",
-            startDate: new Date(),
-            ticker: "AAPL",
-            direction: "Long",
-            type: "Stock",
-            status: "Open",
-            volume: 100,
-            openPosition: 100,
-            averagePrice: 100,
-            commission: -10,
-            fees: -20,
-            pnl: 300,
-            endDate: new Date(),
-            result: TradeResult.Win,
-            executionTime: 0,
-            notes: "",
-            tags: ["tag1", "tag2"]
-        }
-    ];
+    const dailyTrades: Trade[] = [];
     /*
         * Total Trades, Win Rate, Total Volume, Commissions, Fees, PnL, A chart displays pnl for daily trades
         * A table displays the following columns: Start Time, Ticker, Side, ROI, R-Multiple, Tags, PnL, Exec Count,
      */
+    if (!dailyStats) return null;
     return (<Drawer modal={true} open={dailyDrawerOpen} onClose={() => setDailyDrawerOpen(false)}>
             <DrawerContent>
                 <DrawerHeader>
@@ -95,7 +59,7 @@ const DailyTradesView = () => {
                                     <TableCell className={"w-0 whitespace-nowrap"}>Win Rate</TableCell>
                                     <TableCell className={"flex gap-4 justify-center items-center"}>
                                     <span
-                                        className={cn("inline-flex", dailyStats.profitFactor > 0 && "text-foreground-green", dailyStats.profitFactor < 0 && "text-foreground-red")}>%{dailyStats.winCount / (dailyStats.winCount + dailyStats.breakEvenCount + dailyStats.lossCount) * 100}</span>
+                                        className={cn("inline-flex", dailyStats.profitFactor > 0 && "text-foreground-green", dailyStats.profitFactor < 0 && "text-foreground-red")}>%{(dailyStats.winCount / (dailyStats.winCount + dailyStats.breakEvenCount + dailyStats.lossCount) * 100).toFixed(2)}</span>
                                         <StatsWidget left={dailyStats.winCount} right={dailyStats.lossCount}
                                                      mid={dailyStats.breakEvenCount} />
                                     </TableCell>
@@ -104,7 +68,7 @@ const DailyTradesView = () => {
                                     <TableCell className={"w-0 whitespace-nowrap"}>Avg Win/Loss</TableCell>
                                     <TableCell className={"flex gap-4 justify-center items-center"}>
                                     <span
-                                        className={cn("inline-flex", dailyStats.profitFactor > 0 && "text-foreground-green", dailyStats.profitFactor < 0 && "text-foreground-red")}>%{dailyStats.winCount / (dailyStats.winCount + dailyStats.breakEvenCount + dailyStats.lossCount) * 100}</span>
+                                        className={cn("inline-flex", dailyStats.profitFactor > 0 && "text-foreground-green", dailyStats.profitFactor < 0 && "text-foreground-red")}>%{(dailyStats.winCount / (dailyStats.winCount + dailyStats.breakEvenCount + dailyStats.lossCount) * 100).toFixed(2)}</span>
                                         <StatsWidget left={dailyStats.winCount} right={dailyStats.lossCount}
                                                      mid={dailyStats.breakEvenCount} />
                                     </TableCell>

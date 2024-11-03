@@ -58,9 +58,11 @@ model Trade {
   averagePrice  Float
   commission    Float
   fees          Float
-  pnl           Float
+  pnlNet        Float
+  pnlGross      Float
+  resultNet     TradeResult?
+  resultGross   TradeResult?
   endDate       DateTime?
-  result        TradeResult?
   executionTime Int?
   notes         String?
   tags          String[]

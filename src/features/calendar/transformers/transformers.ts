@@ -1,6 +1,6 @@
 import { TradeResult, Trade } from "@prisma/client";
 import { getWeeksInMonth, getWeekOfMonth, isSameMonth } from "date-fns";
-import { DailyStats, CalendarWeekStats } from "../components/advanced-calendar/advanced-calendar";
+import { CalendarWeekStats, DailyStats } from "@/features/calendar/types";
 
 export const generateWeeklyCalendarStats = (dailyStats: Record<string, DailyStats>, date: Date) => {
     const weeklyStats: Record<number, CalendarWeekStats> = {};
@@ -16,7 +16,7 @@ export const generateWeeklyCalendarStats = (dailyStats: Record<string, DailyStat
         const weekNumber = getWeekOfMonth(dailyStat.date);
         if (isSameMonth(dailyStat.date, new Date(year, month))) {
             weeklyStats[weekNumber].pnl += dailyStat.pnl;
-            weeklyStats[weekNumber].trades += dailyStat.trades;
+            weeklyStats[weekNumber].trades += dailyStat.tradeCount;
         }
     });
 
@@ -41,7 +41,7 @@ export const generateMonthlyCalendarStats = (dayStats: Record<string, DailyStats
     return {
         month: selectedCalendarDate.getMonth(),
         pnl: Object.values(dayStats).reduce((acc, day) => acc + day.pnl, 0),
-        trades: Object.values(dayStats).reduce((acc, day) => acc + day.trades, 0),
+        trades: Object.values(dayStats).reduce((acc, day) => acc + day.tradeCount, 0),
         result:
             Object.values(dayStats).reduce((acc, day) => acc + day.pnl, 0) > 0
                 ? TradeResult.Win
