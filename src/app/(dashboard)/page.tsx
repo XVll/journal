@@ -20,11 +20,12 @@ import { cn } from "@/lib/utils";
 import DailyTradesView from "@/app/(dashboard)/_components/daily-trades-view";
 import { useGetCalendarDataQuery } from "@/features/calendar/hooks/use-get-calendar-data-query";
 import { useUIStore } from "@/hooks/use-ui-settings";
+import { format } from "date-fns";
 
 function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType, unit: Unit, risk: number = 1, percentageRisk: number = 1) {
     trades?.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 
-    const dailyStatsMap: Record<string, DailyStats> = {};
+    const dailyStatsMap: Map<string, DailyStats> = new Map();
     let dailyStats: DailyStats[] = [];
     let overallStats = new Stats(unit, pnlType);
 
@@ -37,14 +38,14 @@ function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType
     const dailyMaxConsecutiveMap: Record<string, { win: number, loss: number }> = {};
 
     trades.forEach((trade) => {
-        const dateKey = trade.startDate.toISOString().split("T")[0];
+        const dateKey = trade.startDate.toDateString();
 
         // Populate the dailyStatsMap
-        let dailyStats = dailyStatsMap[dateKey];
+        let dailyStats = dailyStatsMap.get(dateKey);
         if (!dailyStats) {
             dailyStats = new DailyStats(trade.startDate, unit, pnlType);
             dailyStats.days = 1;
-            dailyStatsMap[dateKey] = dailyStats;
+            dailyStatsMap.set(dateKey, dailyStats);
         }
         // Todo Update create-trade function to implement new pnlType
         if (getTradeResult(trade, dailyStats.pnlType) === TradeResult.Win) {
@@ -115,7 +116,7 @@ function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType
         dailyStats.volume += trade.volume;
 
     });
-    dailyStats = Array.from(Object.values(dailyStatsMap)).sort((a, b) => a.date.getTime() - b.date.getTime());
+    dailyStats = Array.from(dailyStatsMap.values()).sort((a, b) => a.date.getTime() - b.date.getTime());
     dailyStats.forEach((dailyStat, index) => {
 
         // Fill the overall stats
@@ -190,6 +191,7 @@ function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType
         }))
     };
 }
+
 function calculateCumulativeDailyPnl(dailyPnl: { date: Date; pnl: number }[]) {
     const sortedDailyPnl = dailyPnl.sort((a, b) => a.date.getTime() - b.date.getTime());
 
@@ -199,6 +201,7 @@ function calculateCumulativeDailyPnl(dailyPnl: { date: Date; pnl: number }[]) {
         return { date: day.date, pnl: cumulativeActualPnl };  // Only return cumulativePnl now
     });
 }
+
 const calculateSortinoRatio = (dailyPnLs: { date: Date, pnl: number }[], benchmarkValue: number, riskFreeRate = 0) => {
     const n = dailyPnLs.length;
     if (n < 3) return {
@@ -240,6 +243,7 @@ const calculateSortinoRatio = (dailyPnLs: { date: Date, pnl: number }[], benchma
     };
 
 };
+
 function calculatePerformanceScore(pfScore: number, winRatio: number, avgWlsScore: number, rms: number, cs: number, numberOfDays: number): number {
 
     const FPS =
@@ -249,6 +253,7 @@ function calculatePerformanceScore(pfScore: number, winRatio: number, avgWlsScor
 
     return Math.max(0, Math.min(100, FPS));
 }
+
 function calculateKRatio(cumulativeDailyPnLs: { date: Date, pnl: number }[], benchmark: number = 2) {
     const n = cumulativeDailyPnLs.length;
 
@@ -309,16 +314,16 @@ function calculateKRatio(cumulativeDailyPnLs: { date: Date, pnl: number }[], ben
 
 export default function Dashboard() {
     const { unit, pnlType, dateRange } = useFilterStore();
-    const {dailyDrawerDate} = useUIStore();
-     // const { data: trades, isLoading } = useGetCalendarDataQuery(dateRange);
-      const trades = [
-          {pnlGross: 1000, pnlNet: 1000, averagePrice: 100, volume: 10, commission: -10, fees: -10, startDate: new Date(2024,10,1), executionTime: 10, result: TradeResult.Win},
-          {pnlGross: -1000, pnlNet: -1000, averagePrice: 100, volume: 10, commission: -10, fees: -10, startDate: new Date(2024,10,4), executionTime: 10, result: TradeResult.Loss},
-          {pnlGross: 500, pnlNet: 500, averagePrice: 100, volume: 10, commission: -10, fees: -10, startDate: new Date(2024,10,4), executionTime: 10, result: TradeResult.Win},
-          {pnlGross: 210, pnlNet: 510, averagePrice: 100, volume: 10, commission: -10, fees: -10, startDate: new Date(2024,10,4), executionTime: 10, result: TradeResult.Win},
-          {pnlGross: 1000, pnlNet: 1000, averagePrice: 100, volume: 10, commission: -10, fees: -10, startDate: new Date(2024,10,5), executionTime: 10, result: TradeResult.Win},
-      ];
-      const isLoading = false;
+    const { dailyDrawerDate } = useUIStore();
+    const { data: trades, isLoading } = useGetCalendarDataQuery(dateRange);
+    //  const trades = [
+    //      {pnlGross: 1000, pnlNet: 1000, averagePrice: 100, volume: 10, commission: -10, fees: -10, startDate: new Date(2024,10,1), executionTime: 10, result: TradeResult.Win},
+    //      {pnlGross: -1000, pnlNet: -1000, averagePrice: 100, volume: 10, commission: -10, fees: -10, startDate: new Date(2024,10,4), executionTime: 10, result: TradeResult.Loss},
+    //      {pnlGross: 500, pnlNet: 500, averagePrice: 100, volume: 10, commission: -10, fees: -10, startDate: new Date(2024,10,4), executionTime: 10, result: TradeResult.Win},
+    //      {pnlGross: 210, pnlNet: 510, averagePrice: 100, volume: 10, commission: -10, fees: -10, startDate: new Date(2024,10,4), executionTime: 10, result: TradeResult.Win},
+    //      {pnlGross: 1000, pnlNet: 1000, averagePrice: 100, volume: 10, commission: -10, fees: -10, startDate: new Date(2024,10,5), executionTime: 10, result: TradeResult.Win},
+    //  ];
+    //  const isLoading = false;
 
     const risk = 1000;
     const percentageRisk = 5;
@@ -340,7 +345,9 @@ export default function Dashboard() {
         dailyStatsMap,
         dailyCumulativePnL
     } = calculateDailyPnLAndStats(trades, pnlType, unit, risk, percentageRisk);
-
+    const getDailyTrades = (date: Date) => {
+        return trades?.filter((trade) => trade.startDate.toDateString() === date.toDateString());
+    }
 
     const kellyCriterion = overallStats.avgWinLossRatio
         ? (overallStats.winRate / 100) - ((1 - (overallStats.winRate / 100)) / overallStats.avgWinLossRatio)
@@ -385,12 +392,12 @@ export default function Dashboard() {
                             <Table>
                                 <TableBody>
                                     <TableRow>
-                                        <TableCell className={"w-0 whitespace-nowrap"}>Hold Time (Minute)</TableCell>
+                                        <TableCell className={"w-0 whitespace-nowrap"}>Hold Time</TableCell>
                                         <TableCell>
                                             <StatsWidget left={overallStats.avgHoldTimeWin}
                                                          right={overallStats.avgHoldTimeLoss}
                                                          mid={overallStats.avgHoldTimeBreakEven}
-                                                         formatter={(v: any) => `${(v < 60 ? "<1" : (v / 60).toFixed(0))}`} />
+                                                         formatter={(v: any) => `${(v < 60 ? v.toFixed() + "s" : (v / 60).toFixed(0) + "m")}`} />
                                         </TableCell>
                                     </TableRow>
                                     <TableRow>
@@ -455,7 +462,10 @@ export default function Dashboard() {
                 <div className="col-span-4">
                     <ScoreHistoryWidget chartData={testScores} />
                 </div>
-                <DailyTradesView dailyStats={dailyStatsMap[dailyDrawerDate?.toISOString().split("T")[0]] || undefined} />
+                {
+                    dailyDrawerDate &&
+                    <DailyTradesView dailyStats={dailyStatsMap?.get(dailyDrawerDate.toDateString())}  trades={getDailyTrades(dailyDrawerDate)} unit={unit} />
+                }
             </div>
             {/*
             

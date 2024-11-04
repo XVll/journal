@@ -28,7 +28,7 @@ export const DayStats = ({ date, tradeDays, calendarTargets, unit }: DayContentP
         {Object.keys(tradeDays).includes(new UTCDate(date.getFullYear(), date.getMonth(), date.getDate()).toLocaleDateString()) && (
           <div className="flex flex-col">
             <div className="text-left font-semibold text-sm">{FormatUnit(tradeDays[new UTCDate(date.getFullYear(), date.getMonth(), date.getDate()).toLocaleDateString()]?.pnl, unit) || 0}</div>
-            <div className="text-left">{tradeDays[new UTCDate(date.getFullYear(), date.getMonth(), date.getDate()).toLocaleDateString()]?.trades || 0} Trades</div>
+            <div className="text-left">{tradeDays[new UTCDate(date.getFullYear(), date.getMonth(), date.getDate()).toLocaleDateString()]?.tradeCount || 0} Trades</div>
           </div>
         )}
       </div>

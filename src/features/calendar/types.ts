@@ -106,22 +106,22 @@ export class Stats {
     profit() {
         switch (this.unit) {
             case Unit.Currency:
-                return this.pnlType === PnlType.Gross ? this.profitCurrency + (this._commissionsCurrency + this._feesCurrency) / 2 : this.profitCurrency;
+                return  this.profitCurrency;
             case Unit.Percent:
-                return this.pnlType === PnlType.Gross ? this.profitPercent + (this._commissionsPercent + this._feesPercent) / 2 : this.profitPercent;
+                return  this.profitPercent;
             case Unit.RMultiple:
-                return this.pnlType === PnlType.Gross ? this.profitR + (this._commissionsR + this._feesR) / 2 : this.profitR;
+                return  this.profitR;
         }
     }
 
     loss() {
         switch (this.unit) {
             case Unit.Currency:
-                return this.pnlType === PnlType.Gross ? this.lossCurrency + (this._commissionsCurrency + this._feesCurrency) / 2 : this.lossCurrency;
+                return  this.lossCurrency;
             case Unit.Percent:
-                return this.pnlType === PnlType.Gross ? this.lossPercent + (this._commissionsPercent + this._feesPercent) / 2 : this.lossPercent;
+                return this.lossPercent;
             case Unit.RMultiple:
-                return this.pnlType === PnlType.Gross ? this.lossR + (this._commissionsR + this._feesR) / 2 : this.lossR;
+                return this.lossR;
         }
     }
 

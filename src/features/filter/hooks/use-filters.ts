@@ -55,7 +55,7 @@ export interface FilterState {
 
 const useFilterStore = create<FilterState>()(
     devtools((set) => ({
-        pnlType: PnlType.Gross,
+        pnlType: PnlType.Net,
         unit: Unit.Currency,
         pnlRange: { min: undefined, max: undefined },
         dateRange: { from: startOfMonth(new Date()), to: endOfMonth(new Date()) },

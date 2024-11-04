@@ -63,13 +63,13 @@ export function StatsWidget({ left, mid, right, formatter }: StatsWidgetProps) {
             left: left,
             mid: mid,
             right: right,
-            leftP: mid ? left / (left + mid + right) * 100 : left / (left + right) * 100,
-            midP: mid ? mid / (left + mid + right) * 100 : 0,
-            rightP: mid ? right / (left + mid + right) * 100 : right / (left + right) * 100
+            leftP: mid ? left / (left + mid + right) * 1000 : left / (left + right) * 1000,
+            midP: mid ? mid / (left + mid + right) * 1000 : 0,
+            rightP: mid ? right / (left + mid + right) * 1000 : right / (left + right) * 1000
         };
 
     return (
-        <div className="h-full w-full ">
+        <div className="h-full w-full">
             <ChartContainer config={chartConfig} className="w-full h-5">
                 <BarChart layout="vertical" data={[chartData]} margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
                     <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
@@ -77,8 +77,7 @@ export function StatsWidget({ left, mid, right, formatter }: StatsWidgetProps) {
                     <YAxis type="category" hide />
                     {
                         chartData.left > 0 &&
-                        <Bar dataKey="leftP" stackId="a" fill="var(--color-win)" radius={[4, 0, 0, 4]}
-                             className="w-full">
+                        <Bar dataKey="leftP" stackId="a" fill="var(--color-win)" radius={[4, 0, 0, 4]}>
                             {
                                 <LabelList dataKey="left" position="inside" offset={8} className="fill-foreground-green" fontSize={12} formatter={formatter}/>
                             }
