@@ -1,11 +1,10 @@
-import Papa, {ParseStepResult} from "papaparse";
-import {TradeMapper} from "@/features/import/lib/Parsing/das-schema";
-import {ExecutionInput} from "../../types";
+import Papa, { ParseStepResult } from "papaparse";
+import { TradeMapper } from "@/features/import/lib/Parsing/das-schema";
+import { ExecutionInput } from "../../types";
 
 export const TradeParser = {
     parse<T>(data: string, mapper: TradeMapper<T>, year: number, month: number, day: number): Promise<ExecutionInput[]> {
         const executionInputs: ExecutionInput[] = [];
-        const k = 0;
 
         return new Promise((resolve, reject) => {
                 Papa.parse<T>(data, {
@@ -19,14 +18,14 @@ export const TradeParser = {
                             executionInputs.push(execution);
                         }
                     },
-                    complete: function () {
+                    complete: function() {
                         resolve(executionInputs);
                     },
-                    error: function (error: Error) {
+                    error: function(error: Error) {
                         reject(error);
                     }
                 });
             }
-        )
+        );
     }
-}
+};

@@ -20,7 +20,6 @@ import { cn } from "@/lib/utils";
 import DailyView from "@/app/(dashboard)/_components/daily-view";
 import { useGetCalendarDataQuery } from "@/features/calendar/hooks/use-get-calendar-data-query";
 import { useUIStore } from "@/hooks/use-ui-settings";
-import { format } from "date-fns";
 import TradeView from "@/app/(dashboard)/_components/trade-view";
 
 function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType, unit: Unit, risk: number = 1, percentageRisk: number = 1) {

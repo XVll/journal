@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { useUIStore } from "@/hooks/use-ui-settings";
-import { Trade, TradeResult } from "@prisma/client";
+import { ScalingAction, Trade, TradeResult } from "@prisma/client";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatsWidget } from "@/features/widgets/components/stats";
@@ -45,34 +45,13 @@ const TradeView = () => {
         return null;
     }
 
-    /*
-model Trade {
-  startDate     DateTime
-  direction     TradeDirection
-  type          TradeType
-  status        TradeStatus
-  volume        Int
-  openPosition  Int
-  averagePrice  Float
-  commission    Float
-  fees          Float
-  pnlNet        Float
-  pnlGross      Float
-  resultNet     TradeResult?
-  resultGross   TradeResult?
-  endDate       DateTime?
-  executionTime Int?
-  notes         String?
-  tags          String[]
-}
-    * */
     return (
         <Drawer modal={true} open={tradeDrawerOpen} onClose={() => setTradeDrawerOpen(false)} fadeFromIndex={0}
                 snapPoints={[1.0, 1.0, 1.0, 1.0]}>
             <DrawerContent>
                 <DrawerHeader>
                     <DrawerTitle>Trade</DrawerTitle>
-                    <DrawerDescription>{tradeId}</DrawerDescription>
+                    <DrawerDescription>{data.ticker} - {data.startDate.toString()} - {data.endDate?.toString()}</DrawerDescription>
                 </DrawerHeader>
 
                 <div className={"grid grid-cols-3"}>
@@ -86,29 +65,53 @@ model Trade {
                             <TableBody>
                                 <TableRow className={"border-none"}>
                                     <TableCell className={"w-0 whitespace-nowrap"}>Net PnL</TableCell>
-                                    <TableCell className={cn(data.pnlNet > 0 && "text-foreground-green", data.pnlNet < 0 && "text-foreground-red")}>{data.pnlNet.toFixed(2)}</TableCell>
+                                    <TableCell
+                                        className={cn(data.pnlNet > 0 && "text-foreground-green", data.pnlNet < 0 && "text-foreground-red")}>{data.pnlNet.toFixed(2)}</TableCell>
                                 </TableRow>
                                 <TableRow className={"border-none"}>
                                     <TableCell className={"w-0 whitespace-nowrap"}>Gross PnL</TableCell>
-                                    <TableCell className={cn(data.pnlGross > 0 && "text-foreground-green", data.pnlGross < 0 && "text-foreground-red")}>{data.pnlGross.toFixed(2)}</TableCell>
-                                </TableRow>
-                                <TableRow className={"border-none"}>
-                                    <TableCell>Account</TableCell>
-                                    <TableCell>{data.account}</TableCell>
+                                    <TableCell
+                                        className={cn(data.pnlGross > 0 && "text-foreground-green", data.pnlGross < 0 && "text-foreground-red")}>{data.pnlGross.toFixed(2)}</TableCell>
                                 </TableRow>
                                 <TableRow className={"border-none"}>
                                     <TableCell>Symbol</TableCell>
                                     <TableCell>{data.ticker}</TableCell>
                                 </TableRow>
                                 <TableRow className={"border-none"}>
-                                    <TableCell>Quantity</TableCell>
-                                    <TableCell>{data.quantity}</TableCell>
+                                    <TableCell>Volume</TableCell>
+                                    <TableCell>{data.volume}</TableCell>
                                 </TableRow>
+                                <TableRow className={"border-none"}>
+                                    <TableCell>Direction</TableCell>
+                                    <TableCell
+                                        className={cn(data.direction === "Long" && "text-foreground-green", data.direction === "Short" && "text-foreground-red")}>{data.direction}</TableCell>
+                                </TableRow>
+                                <TableRow className={"border-none"}>
+                                    <TableCell>Commission</TableCell>
+                                    <TableCell>{data.commission.toFixed(2)}</TableCell>
+                                </TableRow>
+                                <TableRow className={"border-none"}>
+                                    <TableCell>Fees</TableCell>
+                                    <TableCell>{data.fees.toFixed(2)}</TableCell>
+                                </TableRow>
+                                <TableRow className={"border-none whitespace-nowrap"}>
+                                    <TableCell>Execution Time</TableCell>
+                                    <TableCell>{data.executionTime}s</TableCell>
+                                </TableRow>
+                                <TableRow className={"border-none"}>
+                                    <TableCell>Notes</TableCell>
+                                    <TableCell>{data.notes}</TableCell>
+                                </TableRow>
+                                <TableRow className={"border-none"}>
+                                    <TableCell>Tags</TableCell>
+                                    <TableCell>{data.tags.join(", ")}</TableCell>
+                                </TableRow>
+
                             </TableBody>
                         </Table>
                     </div>
                     <div className={"col-span-2 flex"}>
-                        <Separator orientation={"vertical"}/>
+                        <Separator orientation={"vertical"} />
                         {
                             data.executions.length > 0 && (
                                 <Table>
@@ -132,8 +135,13 @@ model Trade {
                                     <TableBody>
                                         {
                                             data.executions.map((execution, index) => (
-                                                <TableRow key={index}>
-                                                    <TableCell>{execution.date}</TableCell>
+                                                <TableRow key={index} className={cn(
+                                                    execution.scalingAction === ScalingAction.Initial && "bg-background-bt2",
+                                                    execution.scalingAction === ScalingAction.ScaleIn && "bg-background-blue",
+                                                    execution.scalingAction === ScalingAction.StopLoss && "bg-background-red",
+                                                    execution.scalingAction === ScalingAction.ProfitTaking && "bg-background-green"
+                                                )}>
+                                                    <TableCell>{execution.date.toString()}</TableCell>
                                                     <TableCell>{execution.action}</TableCell>
                                                     <TableCell>{execution.scalingAction}</TableCell>
                                                     <TableCell>{execution.quantity}</TableCell>
