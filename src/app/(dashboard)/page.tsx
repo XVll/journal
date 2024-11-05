@@ -17,10 +17,11 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScoreHistoryWidget } from "@/features/widgets/components/score-history";
 import { cn } from "@/lib/utils";
-import DailyTradesView from "@/app/(dashboard)/_components/daily-trades-view";
+import DailyView from "@/app/(dashboard)/_components/daily-view";
 import { useGetCalendarDataQuery } from "@/features/calendar/hooks/use-get-calendar-data-query";
 import { useUIStore } from "@/hooks/use-ui-settings";
 import { format } from "date-fns";
+import TradeView from "@/app/(dashboard)/_components/trade-view";
 
 function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType, unit: Unit, risk: number = 1, percentageRisk: number = 1) {
     trades?.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
@@ -103,10 +104,18 @@ function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType
             overallConsecutiveWins = 0;
         }
 
-        dailyStats._largestGrossGain = Math.max(dailyStats._largestGrossGain, trade.pnlGross);
-        dailyStats._largestNetGain = Math.max(dailyStats._largestNetGain, trade.pnlNet);
-        dailyStats._largestGrossLoss = Math.min(dailyStats._largestGrossLoss, trade.pnlGross);
-        dailyStats._largestNetLoss = Math.min(dailyStats._largestNetLoss, trade.pnlNet);
+        dailyStats._largestGrossGainCurrency = Math.max(dailyStats._largestGrossGainCurrency, trade.pnlGross);
+        dailyStats._largestGrossGainPercent = Math.max(dailyStats._largestGrossGainPercent, trade.pnlGross / ((trade.averagePrice * (trade.volume / 2)) * (percentageRisk / 100)));
+        dailyStats._largestGrossGainRMultiple = Math.max(dailyStats._largestGrossGainRMultiple, trade.pnlGross / risk);
+        dailyStats._largestNetGainCurrency = Math.max(dailyStats._largestNetGainCurrency, trade.pnlNet);
+        dailyStats._largestNetGainPercent = Math.max(dailyStats._largestNetGainPercent, trade.pnlNet / ((trade.averagePrice * (trade.volume / 2)) * (percentageRisk / 100)));
+        dailyStats._largestNetGainRMultiple = Math.max(dailyStats._largestNetGainRMultiple, trade.pnlNet / risk);
+        dailyStats._largestGrossLossCurrency = Math.min(dailyStats._largestGrossLossCurrency, trade.pnlGross);
+        dailyStats._largestGrossLossPercent = Math.min(dailyStats._largestGrossLossPercent, trade.pnlGross / ((trade.averagePrice * (trade.volume / 2)) * (percentageRisk / 100)));
+        dailyStats._largestGrossLossRMultiple = Math.min(dailyStats._largestGrossLossRMultiple, trade.pnlGross / risk);
+        dailyStats._largestNetLossCurrency = Math.min(dailyStats._largestNetLossCurrency, trade.pnlNet);
+        dailyStats._largestNetLossPercent = Math.min(dailyStats._largestNetLossPercent, trade.pnlNet / ((trade.averagePrice * (trade.volume / 2)) * (percentageRisk / 100)));
+        dailyStats._largestNetLossRMultiple = Math.min(dailyStats._largestNetLossRMultiple, trade.pnlNet / risk);
         dailyStats._commissionsCurrency += trade.commission;
         dailyStats._commissionsPercent += trade.commission / ((trade.averagePrice * (trade.volume / 2)) * (percentageRisk / 100));
         dailyStats._commissionsR += trade.commission / risk;
@@ -132,10 +141,18 @@ function calculateDailyPnLAndStats(trades: Trade[] | undefined, pnlType: PnlType
         overallStats._feesCurrency += dailyStat._feesCurrency;
         overallStats._feesPercent += dailyStat._feesPercent;
         overallStats._feesR += dailyStat._feesR;
-        overallStats._largestNetGain = Math.max(overallStats._largestNetGain, dailyStat._largestNetGain);
-        overallStats._largestGrossGain = Math.max(overallStats._largestGrossGain, dailyStat._largestGrossGain);
-        overallStats._largestNetLoss = Math.min(overallStats._largestNetLoss, dailyStat._largestNetLoss);
-        overallStats._largestGrossLoss = Math.min(overallStats._largestGrossLoss, dailyStat._largestGrossLoss);
+        overallStats._largestGrossGainCurrency = Math.max(overallStats._largestGrossGainCurrency, dailyStat._largestGrossGainCurrency);
+        overallStats._largestGrossGainPercent = Math.max(overallStats._largestGrossGainPercent, dailyStat._largestGrossGainPercent);
+        overallStats._largestGrossGainRMultiple = Math.max(overallStats._largestGrossGainRMultiple, dailyStat._largestGrossGainRMultiple);
+        overallStats._largestNetGainCurrency = Math.max(overallStats._largestNetGainCurrency, dailyStat._largestNetGainCurrency);
+        overallStats._largestNetGainPercent = Math.max(overallStats._largestNetGainPercent, dailyStat._largestNetGainPercent);
+        overallStats._largestNetGainRMultiple = Math.max(overallStats._largestNetGainRMultiple, dailyStat._largestNetGainRMultiple);
+        overallStats._largestGrossLossCurrency = Math.min(overallStats._largestGrossLossCurrency, dailyStat._largestGrossLossCurrency);
+        overallStats._largestGrossLossPercent = Math.min(overallStats._largestGrossLossPercent, dailyStat._largestGrossLossPercent);
+        overallStats._largestGrossLossRMultiple = Math.min(overallStats._largestGrossLossRMultiple, dailyStat._largestGrossLossRMultiple);
+        overallStats._largestNetLossCurrency = Math.min(overallStats._largestNetLossCurrency, dailyStat._largestNetLossCurrency);
+        overallStats._largestNetLossPercent = Math.min(overallStats._largestNetLossPercent, dailyStat._largestNetLossPercent);
+        overallStats._largestNetLossRMultiple = Math.min(overallStats._largestNetLossRMultiple, dailyStat._largestNetLossRMultiple);
         overallStats.winCount += dailyStat.winCount;
         overallStats.lossCount += dailyStat.lossCount;
         overallStats.breakEvenCount += dailyStat.breakEvenCount;
@@ -463,9 +480,9 @@ export default function Dashboard() {
                     <ScoreHistoryWidget chartData={testScores} />
                 </div>
                 {
-                    dailyDrawerDate &&
-                    <DailyTradesView dailyStats={dailyStatsMap?.get(dailyDrawerDate.toDateString())}  trades={getDailyTrades(dailyDrawerDate)} unit={unit} />
+                    dailyDrawerDate && <DailyView dailyStats={dailyStatsMap?.get(dailyDrawerDate.toDateString())} trades={getDailyTrades(dailyDrawerDate)}/>
                 }
+                <TradeView/>
             </div>
             {/*
             

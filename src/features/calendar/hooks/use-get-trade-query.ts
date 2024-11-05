@@ -11,23 +11,16 @@ import qs from "qs";
 import { Trade } from "@prisma/client";
 import { DateRange } from "react-day-picker";
 
-export const useGetCalendarDataQuery = (dateRange:DateRange | undefined) => {
+export const useGetTradeQuery = (id:string | undefined) => {
 
-    const filters = useFilterStore((state) => state);
-    const query = qs.stringify({
-        dateRange: filters.dateRange,
-        pnlType: filters.pnlType,
-        pnlRange: filters.pnlRange,
-    });
-
-    return useQuery<Trade[], Error>({
+    return useQuery<TradeWithExecutions, Error>({
         staleTime: 1000 * 60 * 5,
-        queryKey: ["trades-get", dateRange],
+        queryKey: ["trade-get", id],
         queryFn: async () => {
-            const res = await rpc.api.trade.trades.$get({
-                query: {
-                    query,
-                },
+            const res = await rpc.api.trade.trade[':id'].$get({
+                param:{
+                    id
+                }
             });
 
             if (!res.ok) {
@@ -35,8 +28,8 @@ export const useGetCalendarDataQuery = (dateRange:DateRange | undefined) => {
             }
 
             const result = await res.json();
-            return superjson.deserialize<Trade[]>(result);
+            return result as TradeWithExecutions;
         },
-        enabled: !!dateRange
+        enabled: !!id
     });
 };

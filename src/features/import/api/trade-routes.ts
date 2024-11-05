@@ -9,9 +9,16 @@ import { FilterSchema, FilterState } from "@/features/filter/hooks/use-filters";
 import { z } from "zod";
 import { endOfMonth, startOfMonth } from "date-fns";
 import qs from "qs";
+
 const app = new Hono()
     .post("/import", async (c) => {
-        const { tradeData, account, year, month, day } = await c.req.json<{ tradeData: string; account: string; year: number; month: number; day: number }>();
+        const { tradeData, account, year, month, day } = await c.req.json<{
+            tradeData: string;
+            account: string;
+            year: number;
+            month: number;
+            day: number
+        }>();
 
         const results = await TradeParser.parse<DasSchema>(tradeData, DasTradeMapper, year, month, day);
         const t = await CreateTrades(results, account);
@@ -20,8 +27,8 @@ const app = new Hono()
             return db.trade.create({
                 data: {
                     ...rest,
-                    executions: { create: executions },
-                },
+                    executions: { create: executions }
+                }
             });
         });
 
@@ -31,7 +38,7 @@ const app = new Hono()
         return c.json({});
     })
     .get("/trades", async (c) => {
-        const {query} = c.req.query();
+        const { query } = c.req.query();
         const parsedFilter = qs.parse(query);
         const filters = FilterSchema.parse(parsedFilter);
 
@@ -42,9 +49,9 @@ const app = new Hono()
             where: {
                 startDate: {
                     gte: startDate,
-                    lt: endDate,
-                },
-            },
+                    lt: endDate
+                }
+            }
             //where: {
             // ticker: { contains: "AAPL" },
             // status: TradeStatus.Closed,
@@ -60,6 +67,19 @@ const app = new Hono()
         const resp = superjson.serialize(trades);
         return c.json(resp);
 
-    });
+    })
+    .get("/trade/:id", async (c) => {
+        const { id } = c.req.param();
+        const trade = await db.trade.findUnique({
+            where: {
+                id: id
+            },
+            include: {
+                executions: true
+            }
+        });
+        return c.json(trade);
+    })
+;
 
 export default app;

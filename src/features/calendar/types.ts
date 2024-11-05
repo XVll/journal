@@ -34,10 +34,18 @@ export class Stats {
     _commissionsR: number = 0; // Daily.Ok Overall.Ok
     _feesR: number = 0; // Daily.Ok Overall.Ok
 
-    _largestGrossGain: number = 0; // Daily.Ok Overall.Ok
-    _largestNetGain: number = 0; // Daily.Ok Overall.Ok
-    _largestNetLoss: number = 0; // Daily.Ok Overall.Ok
-    _largestGrossLoss: number = 0; // Daily.Ok Overall.Ok
+    _largestGrossGainCurrency: number = 0; // Daily.Ok Overall.Ok
+    _largestGrossGainPercent: number = 0; // Daily.Ok Overall.Ok
+    _largestGrossGainRMultiple: number = 0; // Daily.Ok Overall.Ok
+    _largestNetGainCurrency: number = 0; // Daily.Ok Overall.Ok
+    _largestNetGainPercent: number = 0; // Daily.Ok Overall.Ok
+    _largestNetGainRMultiple: number = 0; // Daily.Ok Overall.Ok
+    _largestNetLossCurrency: number = 0; // Daily.Ok Overall.Ok
+    _largestNetLossPercent: number = 0; // Daily.Ok Overall.Ok
+    _largestNetLossRMultiple: number = 0; // Daily.Ok Overall.Ok
+    _largestGrossLossCurrency: number = 0; // Daily.Ok Overall.Ok
+    _largestGrossLossPercent: number = 0; // Daily.Ok Overall.Ok
+    _largestGrossLossRMultiple: number = 0; // Daily.Ok Overall.Ok
     maxConsecutiveGrossWins: number = 0; // Daily.Ok Overall.Ok
     maxConsecutiveNetWins: number = 0; // Daily.Ok Overall.Ok
     maxConsecutiveNetLoss: number = 0; // Daily.Ok Overall.Ok
@@ -58,11 +66,25 @@ export class Stats {
     }
 
     get largestGain() {
-        return this.pnlType === PnlType.Gross ? this._largestGrossGain : this._largestNetGain;
+        switch (this.unit) {
+            case Unit.Currency:
+                return this.pnlType === PnlType.Gross ? this._largestGrossGainCurrency : this._largestNetGainCurrency;
+            case Unit.Percent:
+                return this.pnlType === PnlType.Gross ? this._largestGrossGainPercent : this._largestNetGainPercent;
+            case Unit.RMultiple:
+                return this.pnlType === PnlType.Gross ? this._largestGrossGainRMultiple : this._largestNetGainRMultiple;
+        }
     }
 
     get largestLoss() {
-        return this.pnlType === PnlType.Gross ? this._largestGrossLoss : this._largestNetLoss;
+        switch (this.unit) {
+            case Unit.Currency:
+                return this.pnlType === PnlType.Gross ? this._largestGrossLossCurrency : this._largestNetLossCurrency;
+            case Unit.Percent:
+                return this.pnlType === PnlType.Gross ? this._largestGrossLossPercent : this._largestNetLossPercent;
+            case Unit.RMultiple:
+                return this.pnlType === PnlType.Gross ? this._largestGrossLossRMultiple : this._largestNetLossRMultiple;
+        }
     }
 
     get maxConsecutiveWins() {

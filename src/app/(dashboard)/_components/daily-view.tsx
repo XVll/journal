@@ -21,10 +21,9 @@ interface DailyTradesViewProps {
     trades?: Trade[];
 }
 
-const DailyTradesView = ({ dailyStats, trades }: DailyTradesViewProps) => {
-    const { dailyDrawerOpen, setDailyDrawerOpen, dailyDrawerDate } = useUIStore();
+const DailyView = ({ dailyStats, trades }: DailyTradesViewProps) => {
+    const { dailyDrawerOpen, setDailyDrawerOpen, dailyDrawerDate, setTradeDrawerOpen } = useUIStore();
     if (!dailyStats) return null;
-    console.log(dailyStats);
     return (
         <Drawer modal={true} open={dailyDrawerOpen} onClose={() => setDailyDrawerOpen(false)} fadeFromIndex={0}
                 snapPoints={[1.0, 1.0, 1.0, 1.0]}>
@@ -145,7 +144,7 @@ const DailyTradesView = ({ dailyStats, trades }: DailyTradesViewProps) => {
                             </TableHeader>
                             <TableBody>
                                 {trades?.map((trade: Trade) => (
-                                    <TableRow key={trade.id}>
+                                    <TableRow key={trade.id} onClick={() => { setTradeDrawerOpen(true, trade.id) }}>
                                         <TableCell>{trade.startDate.toLocaleTimeString()}</TableCell>
                                         <TableCell>{trade.ticker}</TableCell>
                                         <TableCell>{trade.direction}</TableCell>
@@ -186,4 +185,4 @@ const DailyTradesView = ({ dailyStats, trades }: DailyTradesViewProps) => {
         ;
 };
 
-export default DailyTradesView;
+export default DailyView;
