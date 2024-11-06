@@ -57,7 +57,7 @@ export function ScoreHistoryWidget({ chartData }: ScoreHistoryWidgetProps) {
                 <CardTitle>Scores Over Time</CardTitle>
             </CardHeader>
             <CardContent>
-                <ChartContainer config={chartConfig}>
+                <ChartContainer config={chartConfig} className={"h-48 w-full"}>
                     <LineChart
                         accessibilityLayer
                         data={chartData}

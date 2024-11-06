@@ -475,7 +475,7 @@ export default function Dashboard() {
                     <AdvancedCalendar dailyStats={dailyStats} unit={unit} isLoading={isLoading}
                                       profitTarget={profitTargets} />
                 </div>
-                <div className="col-span-4">
+                <div className="col-span-8 col-start-5">
                     <ScoreHistoryWidget chartData={testScores} />
                 </div>
                 {
