@@ -63,8 +63,8 @@ export default function DayOfWeek({ chartData }: D_dayOfWeekProps) {
                             type="category"
                             tickLine={false}
                             tickMargin={10}
+                            interval={0}
                             axisLine={false}
-                            tickFormatter={(value) => value.slice(0, 3)}
                         />
                         <XAxis dataKey="count" type="number" hide />
                         <ChartTooltip

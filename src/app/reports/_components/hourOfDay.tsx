@@ -1,8 +1,7 @@
-
 "use client";
 
 import { TrendingUp } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, XAxis, YAxis } from "recharts";
 
 import {
     Card,
@@ -18,48 +17,41 @@ import {
     ChartTooltip,
     ChartTooltipContent
 } from "@/components/ui/chart";
+import { cn } from "@/lib/utils";
 
 
-
-const chartConfig = {
-    count: {
-        label: "count",
-        color: "hsl(var(--chart-1))"
-    },
-    label: {
-        color: "hsl(var(--background))"
-    }
-} satisfies ChartConfig;
-
-interface HourOfDayProps {
+interface hourOfDayProps {
     chartData: { hour: string, count: number }[];
 }
 
-export default function HourOfDay({ chartData }: HourOfDayProps) {
+export default function HourOfDay({ chartData }: hourOfDayProps) {
     return (
-        <Card>
+        <Card className={"w-full h-full"}>
             <CardHeader>
-                <CardTitle>Trade Distribution by Day of Week</CardTitle>
+                <CardTitle>Trade Distribution by hour of Week</CardTitle>
             </CardHeader>
-            <CardContent>
-                <ChartContainer config={chartConfig} className={"h-20 w-full"}>
+            <CardContent className={"pl-0"}>
+                <ChartContainer config={{}}>
                     <BarChart
+
                         accessibilityLayer
                         data={chartData}
                         layout="vertical"
                         margin={{
-                            right: 16
+                            right: 36,
+                            left: 24
                         }}
                     >
                         <CartesianGrid horizontal={false} />
                         <YAxis
-                            dataKey="day"
+                            dataKey="hour"
                             type="category"
+                            className={"font-mono"}
+                            fontSize={11}
                             tickLine={false}
-                            tickMargin={10}
+                            tickMargin={36}
+                            interval={0}
                             axisLine={false}
-                            tickFormatter={(value) => value.slice(0, 3)}
-                            hide
                         />
                         <XAxis dataKey="count" type="number" hide />
                         <ChartTooltip
@@ -69,23 +61,21 @@ export default function HourOfDay({ chartData }: HourOfDayProps) {
                         <Bar
                             dataKey="count"
                             layout="vertical"
-                            fill="var(--color-count)"
+                            className={cn("fill-foreground")}
                             radius={4}
                         >
-                            <LabelList
-                                dataKey="day"
-                                position="insideLeft"
-                                offset={8}
-                                className="fill-[--color-label]"
-                                fontSize={12}
-                            />
+                            {
+                                chartData.map((entry, index) => (
+                                    <Cell  key={`cell-${index}`} className={cn(entry.count > 0 ? "fill-foreground-green":"fill-foreground-red ")}/>
+                                ))
+                            }
                             <LabelList
                                 dataKey="count"
                                 position="right"
-                                offset={8}
                                 className="fill-foreground"
+                                offset={8}
                                 fontSize={12}
-                                formatter={(value:number) => value.toFixed(2)}
+                                formatter={(value: number) => !!value ? value.toFixed(2) : ""}
                             />
                         </Bar>
                     </BarChart>

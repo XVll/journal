@@ -1,7 +1,23 @@
 import DayOfWeek from "@/app/reports/_components/dayOfWeek";
 import { PnlType, Unit } from "@/features/filter/types";
 import db from "@/lib/db/db";
-import { format } from "date-fns";
+import { addHours, addMinutes, format, roundToNearestMinutes } from "date-fns";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
+import HourOfDay from "@/app/reports/_components/hourOfDay";
+
+
+const generateTradingHours = (interval: number): Map<string, number> => {
+    const map = new Map<string, number>();
+    const totalIntervals = 960 / interval; // 960 minutes for a 16-hour day
+
+    for (let i = 0; i < totalIntervals; i++) {
+        const time = format(addMinutes(new Date(1970, 0, 1), 240 + i * interval), "HH:mm");
+        map.set(time, 0);
+    }
+
+    return map;
+};
+
 
 const ReportsPage = async () => {
     /*
@@ -18,18 +34,16 @@ const ReportsPage = async () => {
     const tradePerformancesByDayOfWeekMap: Map<string, number> = new Map(
         Array.from({ length: 7 }, (_, i) => [format(new Date(0, 0, i), "EEEE"), 0])
     );
-    const tradeDistributionByHourOfDayMap: Map<string, number> = new Map(
-        Array.from({ length: 24 }, (_, i) => [i.toString(), 0])
-    );
-    const tradePerformancesByHourOfDayMap: Map<string, number> = new Map(
-        Array.from({ length: 24 }, (_, i) => [i.toString(), 0])
-    );
+    // 16  * 60 = 960
+    const tradeDistributionByHourOfDayMap: Map<string, number> = generateTradingHours(30);
+    const tradePerformancesByHourOfDayMap: Map<string, number> = generateTradingHours(30);
 
     const trades = await db.trade.findMany();
     trades.forEach(trade => {
         if (!trade.endDate) return;
         const dayOfWeek = format(trade.endDate, "EEEE");
-        const hourOfDay = format(trade.endDate, "H");
+        const roundedDate = roundToNearestMinutes(trade.endDate, { nearestTo: 30 });
+        const hourOfDay = format(toZonedTime(roundedDate, "America/New_York"), "HH:mm");
 
         if (tradeDistributionByDayOfWeekMap.has(dayOfWeek)) {
             tradeDistributionByDayOfWeekMap.set(dayOfWeek, (tradeDistributionByDayOfWeekMap.get(dayOfWeek) || 0) + 1);
@@ -62,14 +76,14 @@ const ReportsPage = async () => {
     })) as { day: string, count: number }[];
 
     const tradeDistributionByHourOfDay = Array.from(tradeDistributionByHourOfDayMap).map(([hourOfDay, tradeCount]) => ({
-        day: hourOfDay,
+        hour: hourOfDay,
         count: tradeCount
-    })) as { day: string, count: number }[];
+    })) as { hour: string, count: number }[];
 
     const tradePerformancesByHourOfDay = Array.from(tradePerformancesByHourOfDayMap).map(([hourOfDay, pnl]) => ({
-        day: hourOfDay,
+        hour: hourOfDay,
         count: pnl
-    })) as { day: string, count: number }[];
+    })) as { hour: string, count: number }[];
 
 
     return (
@@ -77,20 +91,10 @@ const ReportsPage = async () => {
             <div className={"flex col-span-4 flex-row gap-2"}>
                 <DayOfWeek chartData={distributionChartData} />
                 <DayOfWeek chartData={tradePerformancesByDayOfWeek} />
-                <DayOfWeek chartData={tradeDistributionByHourOfDay} />
-                <DayOfWeek chartData={tradePerformancesByHourOfDay} />
             </div>
             <div className={"flex col-span-4 flex-row gap-2"}>
-                <DayOfWeek chartData={distributionChartData} />
-                <DayOfWeek chartData={tradePerformancesByDayOfWeek} />
-                <DayOfWeek chartData={distributionChartData} />
-                <DayOfWeek chartData={tradePerformancesByDayOfWeek} />
-            </div>
-            <div className={"flex col-span-4 flex-row gap-2"}>
-                <DayOfWeek chartData={distributionChartData} />
-                <DayOfWeek chartData={tradePerformancesByDayOfWeek} />
-                <DayOfWeek chartData={distributionChartData} />
-                <DayOfWeek chartData={tradePerformancesByDayOfWeek} />
+                <HourOfDay chartData={tradeDistributionByHourOfDay} />
+                <HourOfDay chartData={tradePerformancesByHourOfDay} />
             </div>
         </div>
     );
