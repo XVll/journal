@@ -43,7 +43,7 @@ interface D_dayOfWeekProps {
 
 export default function DayOfWeek({ chartData }: D_dayOfWeekProps) {
     return (
-        <Card className={"w-full h-full"}>
+        <Card className={"w-full"}>
             <CardHeader>
                 <CardTitle>Trade Distribution by Day of Week</CardTitle>
             </CardHeader>

@@ -23,7 +23,7 @@ const generateDaysOfWeek = (): Map<string, number> => {
     return new Map(
         Array.from({ length: 7 }, (_, i) => [format(new Date(0, 0, i), "EEEE"), 0])
     );
-}
+};
 
 /*
       * Trade Distribution by Duration
@@ -33,7 +33,7 @@ const generateDaysOfWeek = (): Map<string, number> => {
         * Bar chart with Duration on x-axis and PnL on y-axis. Duration will be in minutes like Under 1min, 1-2, 2-5, 5-10 , 10-30 ...
         * Required data: {Duration: Int, PnL: Float}[]
 * */
-const generateDurations = (): Map<string,number> => {
+const generateDurations = (): Map<string, number> => {
     const map = new Map<string, number>();
     const durations = ["< 00:15", "00:15 - 00:30", "00:30 - 00:45", "00:45 - 00:59", "01:00 - 02:00", "02:00 - 05:00", "05:00 - 10:00", "10:00 - 30:00", "30:00 - 60:00", "> 60:00"];
     durations.forEach(duration => {
@@ -41,7 +41,7 @@ const generateDurations = (): Map<string,number> => {
     });
 
     return map;
-}
+};
 /*
 [ ] Trade Distribution by Price Range
 * Bar chart with Price Range on x-axis and Trade Count on y-axis. Price Range will be in range like < 1.00, 1.00 - 2.00, 2.00 - 5.00, 5.00 - 10.00, 10.00 - 20.00, > 20.00
@@ -58,7 +58,7 @@ const generatePriceRanges = (): Map<string, number> => {
     });
 
     return map;
-}
+};
 
 const ReportsPage = async () => {
     const unit = Unit.Currency;
@@ -99,7 +99,7 @@ const ReportsPage = async () => {
         }
         // Duration
         const duration = trade.executionTime || 0;
-        const durationInMinutesRounded = duration < 15 ? "< 00:15" : duration < 30 ? "00:15 - 00:30" : duration < 45 ? "00:30 - 00:45" : duration < 60 ? "00:45 - 00:59" : duration < 120 ? "01:00 - 02:00" : duration  < 300 ? "02:00 - 05:00" : duration < 600 ? "05:00 - 10:00" : duration < 1800 ? "10:00 - 30:00" : duration < 3600 ? "30:00 - 60:00" : "> 60:00";
+        const durationInMinutesRounded = duration < 15 ? "< 00:15" : duration < 30 ? "00:15 - 00:30" : duration < 45 ? "00:30 - 00:45" : duration < 60 ? "00:45 - 00:59" : duration < 120 ? "01:00 - 02:00" : duration < 300 ? "02:00 - 05:00" : duration < 600 ? "05:00 - 10:00" : duration < 1800 ? "10:00 - 30:00" : duration < 3600 ? "30:00 - 60:00" : "> 60:00";
         if (tradeDistributionByDurationMap.has(durationInMinutesRounded)) {
             tradeDistributionByDurationMap.set(durationInMinutesRounded, (tradeDistributionByDurationMap.get(durationInMinutesRounded) || 0) + 1);
             tradePerformancesByDurationMap.set(durationInMinutesRounded, (tradePerformancesByDurationMap.get(durationInMinutesRounded) || 0) + (pnlType === PnlType.Net ? trade.pnlNet : trade.pnlGross));
@@ -156,16 +156,28 @@ const ReportsPage = async () => {
 
 
     return (
-        <div className={"grid grid-cols-4 gap-4 p-4 grid-rows-4"}>
-            <div className={"flex col-span-4 flex-row gap-2"}>
+        <div className={"grid grid-cols-2 grid-rows-4 gap-4 p-4  h-[calc(100vh-0rem)]"}>
+            <Tabs defaultValue="account" className="w-[400px]">
+                <TabsList>
+                    <TabsTrigger value="account">Account</TabsTrigger>
+                    <TabsTrigger value="password">Password</TabsTrigger>
+                </TabsList>
+                <TabsContent value="account">Make changes to your account here.</TabsContent>
+                <TabsContent value="password">Change your password here.</TabsContent>
+            </Tabs>
+            <div className={"flex gap-4 col-span-2 row-span-1"}>
                 <DayOfWeek chartData={distributionChartData} />
                 <DayOfWeek chartData={tradePerformancesByDayOfWeek} />
+            </div>
+            <div className={"flex gap-4 col-span-2 row-span-1"}>
                 <Duration chartData={tradeDistributionByDuration} />
                 <Duration chartData={tradePerformancesByDuration} />
             </div>
-            <div className={"flex col-span-4 flex-row gap-2"}>
+            <div className={"flex gap-4"}>
                 <HourOfDay chartData={tradeDistributionByHourOfDay} />
                 <HourOfDay chartData={tradePerformancesByHourOfDay} />
+            </div>
+            <div className={"flex gap-4"}>
                 <Price chartData={tradeDistributionByPriceRange} />
                 <Price chartData={tradePerformancesByPriceRange} />
             </div>

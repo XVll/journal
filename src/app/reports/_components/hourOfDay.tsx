@@ -26,7 +26,7 @@ interface hourOfDayProps {
 
 export default function HourOfDay({ chartData }: hourOfDayProps) {
     return (
-        <Card className={"w-full h-full"}>
+        <Card className={""}>
             <CardHeader>
                 <CardTitle>Trade Distribution by hour of Week</CardTitle>
             </CardHeader>

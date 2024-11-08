@@ -26,7 +26,7 @@ interface PriceProps {
 
 export default function Price({ chartData }: PriceProps) {
     return (
-        <Card className={"w-full h-full"}>
+        <Card className={""}>
             <CardHeader>
                 <CardTitle>Trade Distribution by price of Week</CardTitle>
             </CardHeader>

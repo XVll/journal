@@ -26,7 +26,7 @@ interface DurationProps {
 
 export default function Duration({ chartData }: DurationProps) {
     return (
-        <Card className={"w-full h-full"}>
+        <Card className={""}>
             <CardHeader>
                 <CardTitle>Trade Distribution by duration of Week</CardTitle>
             </CardHeader>
