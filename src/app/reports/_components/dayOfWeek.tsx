@@ -43,18 +43,19 @@ interface D_dayOfWeekProps {
 
 export default function DayOfWeek({ chartData }: D_dayOfWeekProps) {
     return (
-        <Card className={"w-full"}>
+        <Card className={"w-full h-full"}>
             <CardHeader>
                 <CardTitle>Trade Distribution by Day of Week</CardTitle>
             </CardHeader>
             <CardContent className={"pl-0"}>
-                <ChartContainer config={chartConfig}>
+                <ChartContainer config={chartConfig} className={"aspect-square"}>
                     <BarChart
                         accessibilityLayer
                         data={chartData}
                         layout="vertical"
                         margin={{
-                            right: 36,
+                            right: 48,
+                            left: 36
                         }}
                     >
                         <CartesianGrid horizontal={false} />
@@ -65,6 +66,7 @@ export default function DayOfWeek({ chartData }: D_dayOfWeekProps) {
                             tickMargin={10}
                             interval={0}
                             axisLine={false}
+                            tickFormatter={(value: string) => value.slice(0, 3)}
                         />
                         <XAxis dataKey="count" type="number" hide />
                         <ChartTooltip

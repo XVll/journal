@@ -26,12 +26,12 @@ interface hourOfDayProps {
 
 export default function HourOfDay({ chartData }: hourOfDayProps) {
     return (
-        <Card className={""}>
+        <Card className={"w-full h-full"}>
             <CardHeader>
                 <CardTitle>Trade Distribution by hour of Week</CardTitle>
             </CardHeader>
             <CardContent className={"pl-0"}>
-                <ChartContainer config={{}}>
+                <ChartContainer config={{}} className={"aspect-square"}>
                     <BarChart
 
                         accessibilityLayer
@@ -39,7 +39,7 @@ export default function HourOfDay({ chartData }: hourOfDayProps) {
                         layout="vertical"
                         margin={{
                             right: 36,
-                            left: 24
+                            left: 60
                         }}
                     >
                         <CartesianGrid horizontal={false} />
@@ -49,7 +49,8 @@ export default function HourOfDay({ chartData }: hourOfDayProps) {
                             className={"font-mono"}
                             fontSize={11}
                             tickLine={false}
-                            tickMargin={36}
+                            tickMargin={60}
+                            minTickGap={10}
                             interval={0}
                             axisLine={false}
                         />
@@ -66,7 +67,7 @@ export default function HourOfDay({ chartData }: hourOfDayProps) {
                         >
                             {
                                 chartData.map((entry, index) => (
-                                    <Cell  key={`cell-${index}`} className={cn(entry.count > 0 ? "fill-foreground-green":"fill-foreground-red ")}/>
+                                    <Cell key={`cell-${index}`} className={cn(entry.count > 0 ? "fill-foreground-green":"fill-foreground-red ")}/>
                                 ))
                             }
                             <LabelList

@@ -26,12 +26,12 @@ interface PriceProps {
 
 export default function Price({ chartData }: PriceProps) {
     return (
-        <Card className={""}>
+        <Card className={"w-full h-full"}>
             <CardHeader>
                 <CardTitle>Trade Distribution by price of Week</CardTitle>
             </CardHeader>
             <CardContent className={"pl-0"}>
-                <ChartContainer config={{}}>
+                <ChartContainer config={{}} className={"aspect-square "}>
                     <BarChart
 
                         accessibilityLayer
@@ -39,7 +39,7 @@ export default function Price({ chartData }: PriceProps) {
                         layout="vertical"
                         margin={{
                             right: 36,
-                            left: 24
+                            left: 36
                         }}
                     >
                         <CartesianGrid horizontal={false} />
@@ -49,6 +49,7 @@ export default function Price({ chartData }: PriceProps) {
                             className={"font-mono"}
                             fontSize={11}
                             tickLine={false}
+                            width={110}
                             tickMargin={36}
                             interval={0}
                             axisLine={false}

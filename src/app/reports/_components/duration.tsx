@@ -26,20 +26,19 @@ interface DurationProps {
 
 export default function Duration({ chartData }: DurationProps) {
     return (
-        <Card className={""}>
+        <Card className={"w-full h-full"}>
             <CardHeader>
                 <CardTitle>Trade Distribution by duration of Week</CardTitle>
             </CardHeader>
             <CardContent className={"pl-0"}>
-                <ChartContainer config={{}}>
+                <ChartContainer config={{}} className={"aspect-square "}>
                     <BarChart
-
                         accessibilityLayer
                         data={chartData}
                         layout="vertical"
                         margin={{
-                            right: 36,
-                            left: 24
+                            left: 60,
+                            right: 36
                         }}
                     >
                         <CartesianGrid horizontal={false} />
@@ -48,9 +47,9 @@ export default function Duration({ chartData }: DurationProps) {
                             type="category"
                             className={"font-mono"}
                             width={110}
+                            tickMargin={60}
                             fontSize={11}
                             tickLine={false}
-                            tickMargin={36}
                             interval={0}
                             axisLine={false}
                         />

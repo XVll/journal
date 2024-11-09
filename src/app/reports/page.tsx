@@ -6,6 +6,7 @@ import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import HourOfDay from "@/app/reports/_components/hourOfDay";
 import Duration from "@/app/reports/_components/duration";
 import Price from "@/app/reports/_components/price";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 const generateTradingHours = (interval: number): Map<string, number> => {
@@ -156,31 +157,31 @@ const ReportsPage = async () => {
 
 
     return (
-        <div className={"grid grid-cols-2 grid-rows-4 gap-4 p-4  h-[calc(100vh-0rem)]"}>
-            <Tabs defaultValue="account" className="w-[400px]">
-                <TabsList>
-                    <TabsTrigger value="account">Account</TabsTrigger>
-                    <TabsTrigger value="password">Password</TabsTrigger>
+        <div className={"w-full"}>
+            <Tabs defaultValue="account" className={"p-4"}>
+                <TabsList className={"mb-4"}>
+                    <TabsTrigger value="dayOfWeek">Day Of Week</TabsTrigger>
+                    <TabsTrigger value="duration">Duration</TabsTrigger>
+                    <TabsTrigger value="hourOfDay">Hour Of Day</TabsTrigger>
+                    <TabsTrigger value="priceRange">Price Range</TabsTrigger>
                 </TabsList>
-                <TabsContent value="account">Make changes to your account here.</TabsContent>
-                <TabsContent value="password">Change your password here.</TabsContent>
+                <TabsContent value="dayOfWeek" className={"flex space-x-4"}>
+                    <DayOfWeek chartData={distributionChartData} />
+                    <DayOfWeek chartData={tradePerformancesByDayOfWeek} />
+                </TabsContent>
+                <TabsContent value="hourOfDay" className={"flex space-x-4"}>
+                    <HourOfDay chartData={tradeDistributionByHourOfDay} />
+                    <HourOfDay chartData={tradePerformancesByHourOfDay} />
+                </TabsContent>
+                <TabsContent value="duration" className={"flex space-x-4"}>
+                    <Duration chartData={tradeDistributionByDuration} />
+                    <Duration chartData={tradePerformancesByDuration} />
+                </TabsContent>
+                <TabsContent value="priceRange" className={"flex space-x-4"}>
+                    <Price chartData={tradeDistributionByPriceRange} />
+                    <Price chartData={tradePerformancesByPriceRange} />
+                </TabsContent>
             </Tabs>
-            <div className={"flex gap-4 col-span-2 row-span-1"}>
-                <DayOfWeek chartData={distributionChartData} />
-                <DayOfWeek chartData={tradePerformancesByDayOfWeek} />
-            </div>
-            <div className={"flex gap-4 col-span-2 row-span-1"}>
-                <Duration chartData={tradeDistributionByDuration} />
-                <Duration chartData={tradePerformancesByDuration} />
-            </div>
-            <div className={"flex gap-4"}>
-                <HourOfDay chartData={tradeDistributionByHourOfDay} />
-                <HourOfDay chartData={tradePerformancesByHourOfDay} />
-            </div>
-            <div className={"flex gap-4"}>
-                <Price chartData={tradeDistributionByPriceRange} />
-                <Price chartData={tradePerformancesByPriceRange} />
-            </div>
         </div>
     );
 };
