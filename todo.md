@@ -27,16 +27,16 @@
      [x] Performance by Duration
         * Bar chart with Duration on x-axis and PnL on y-axis. Duration will be in minutes like Under 1min, 1-2, 2-5, 5-10 , 10-30 ...
         * Required data: {Duration: Int, PnL: Float}[]
-     [ ] Trade Distribution by Price Range
+     [x] Trade Distribution by Price Range
         * Bar chart with Price Range on x-axis and Trade Count on y-axis. Price Range will be in range like < 1.00, 1.00 - 2.00, 2.00 - 5.00, 5.00 - 10.00, 10.00 - 20.00, > 20.00 
         * Required data: {PriceRange: Int, TradeCount: Int}[]
-     [ ] Performance by Price Range
+     [x] Performance by Price Range
         * Bar chart with Price Range on x-axis and PnL on y-axis. Price Range will be in range like < 1.00, 1.00 - 2.00, 2.00 - 5.00, 5.00 - 10.00, 10.00 - 20.00, > 20.00
         * Required data: {PriceRange: Int, PnL: Float}[]
-      * Trade Distribution by Volume
+     [x] Trade Distribution by Volume
         * Bar chart with Volume on x-axis and Trade Count on y-axis. Volume will be in range like Under 100, 100-500 
         * Required data: {Volume: Int, TradeCount: Int}[]
-      * Performance by Volume
+     [x] Performance by Volume
         * Bar chart with Volume on x-axis and PnL on y-axis. Volume will be in range like Under 100, 100-500 
         * Required data: {Volume: Int, PnL: Float}[]
       * Trade Distribution by Ticker

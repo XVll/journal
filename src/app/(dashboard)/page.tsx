@@ -450,7 +450,7 @@ export default function Dashboard() {
                                     </TableRow>
                                     <TableRow>
                                         <TableCell className={"w-0 whitespace-nowrap"}>Avg Daily Volume</TableCell>
-                                        <TableCell>{overallStats.avgDailyVolume}</TableCell>
+                                        <TableCell>{overallStats.avgDailyVolume.toFixed()}</TableCell>
                                     </TableRow>
                                     <TableRow>
                                         <TableCell className={"w-0 whitespace-nowrap"}>Avg Trade Volume</TableCell>

@@ -7,6 +7,7 @@ import HourOfDay from "@/app/reports/_components/hourOfDay";
 import Duration from "@/app/reports/_components/duration";
 import Price from "@/app/reports/_components/price";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Volume from "@/app/reports/_components/volume";
 
 
 const generateTradingHours = (interval: number): Map<string, number> => {
@@ -60,6 +61,15 @@ const generatePriceRanges = (): Map<string, number> => {
 
     return map;
 };
+const generateVolumeRanges = (): Map<string, number> => {
+    const map = new Map<string, number>();
+    const volumeRanges = ["< 100", "100 - 499", "500 - 999", "1000 - 2499", "2500 - 4999", "5000 - 9999", "10000 - 24999", "25000 - 49999", "50000 - 99999", "> 100000"];
+    volumeRanges.forEach(volumeRange => {
+        map.set(volumeRange.toString(), 0);
+    });
+
+    return map;
+}
 
 const ReportsPage = async () => {
     const unit = Unit.Currency;
@@ -77,6 +87,9 @@ const ReportsPage = async () => {
     // Price Range
     const tradeDistributionByPriceRangeMap: Map<string, number> = generatePriceRanges();
     const tradePerformancesByPriceRangeMap: Map<string, number> = generatePriceRanges();
+
+    const tradeDistributionByVolumeMap: Map<string, number> = generateVolumeRanges();
+    const tradePerformancesByVolumeMap: Map<string, number> = generateVolumeRanges();
 
     const trades = await db.trade.findMany();
 
@@ -111,6 +124,14 @@ const ReportsPage = async () => {
         if (tradeDistributionByPriceRangeMap.has(priceRangeRounded)) {
             tradeDistributionByPriceRangeMap.set(priceRangeRounded, (tradeDistributionByPriceRangeMap.get(priceRangeRounded) || 0) + 1);
             tradePerformancesByPriceRangeMap.set(priceRangeRounded, (tradePerformancesByPriceRangeMap.get(priceRangeRounded) || 0) + (pnlType === PnlType.Net ? trade.pnlNet : trade.pnlGross));
+        }
+
+        // Volume
+        const volume = trade.volume || 0;
+        const volumeRange = volume < 100 ? "< 100" : volume < 500 ? "100 - 499" : volume < 1000 ? "500 - 999" : volume < 2500 ? "1000 - 2499" : volume < 5000 ? "2500 - 4999" : volume < 10000 ? "5000 - 9999" : volume < 25000 ? "10000 - 24999" : volume < 50000 ? "25000 - 49999" : volume < 100000 ? "50000 - 99999" : "> 100000";
+        if (tradeDistributionByVolumeMap.has(volumeRange)) {
+            tradeDistributionByVolumeMap.set(volumeRange, (tradeDistributionByVolumeMap.get(volumeRange) || 0) + 1);
+            tradePerformancesByVolumeMap.set(volumeRange, (tradePerformancesByVolumeMap.get(volumeRange) || 0) + (pnlType === PnlType.Net ? trade.pnlNet : trade.pnlGross));
         }
 
     });
@@ -155,6 +176,15 @@ const ReportsPage = async () => {
         count: pnl
     })) as { price: string, count: number }[];
 
+    const tradeDistributionByVolume = Array.from(tradeDistributionByVolumeMap).map(([volumeRange, tradeCount]) => ({
+        volume: volumeRange,
+        count: tradeCount
+    })) as { volume: string, count: number }[];
+    const tradePerformancesByVolume = Array.from(tradePerformancesByVolumeMap).map(([volumeRange, pnl]) => ({
+        volume: volumeRange,
+        count: pnl
+    })) as { volume: string, count: number }[];
+
 
     return (
         <div className={"w-full"}>
@@ -164,6 +194,7 @@ const ReportsPage = async () => {
                     <TabsTrigger value="duration">Duration</TabsTrigger>
                     <TabsTrigger value="hourOfDay">Hour Of Day</TabsTrigger>
                     <TabsTrigger value="priceRange">Price Range</TabsTrigger>
+                    <TabsTrigger value="volume">Volume</TabsTrigger>
                 </TabsList>
                 <TabsContent value="dayOfWeek" className={"flex space-x-4"}>
                     <DayOfWeek chartData={distributionChartData} />
@@ -180,6 +211,10 @@ const ReportsPage = async () => {
                 <TabsContent value="priceRange" className={"flex space-x-4"}>
                     <Price chartData={tradeDistributionByPriceRange} />
                     <Price chartData={tradePerformancesByPriceRange} />
+                </TabsContent>
+                <TabsContent value="volume" className={"flex space-x-4"}>
+                    <Volume chartData={tradeDistributionByVolume} />
+                    <Volume chartData={tradePerformancesByVolume} />
                 </TabsContent>
             </Tabs>
         </div>
