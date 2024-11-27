@@ -15,6 +15,7 @@ import { Currency, FormatUnit } from "@/lib/helpers";
 import { cn } from "@/lib/utils";
 import { PnlType, Unit } from "@/features/filter/types";
 import { DailyStats } from "@/features/calendar/types";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface DailyTradesViewProps {
     dailyStats?: DailyStats;
@@ -129,44 +130,47 @@ const DailyView = ({ dailyStats, trades }: DailyTradesViewProps) => {
                     </div>
                     <div className={"col-span-2 flex"}>
                         <Separator orientation={"vertical"} />
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Time</TableHead>
-                                    <TableHead>Ticker</TableHead>
-                                    <TableHead>Side</TableHead>
-                                    <TableHead className={"text-right"}>PnL</TableHead>
-                                    <TableHead className={"text-right"}>ROI</TableHead>
-                                    <TableHead className={"text-right"}>Volume</TableHead>
-                                    <TableHead className={"text-right"}>Exec Count</TableHead>
-                                    <TableHead className={"text-right"}>Tags</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {trades?.map((trade: Trade) => (
-                                    <TableRow key={trade.id} onClick={() => { setTradeDrawerOpen(true, trade.id) }}>
-                                        <TableCell>{trade.startDate.toLocaleTimeString()}</TableCell>
-                                        <TableCell>{trade.ticker}</TableCell>
-                                        <TableCell>{trade.direction}</TableCell>
-                                        <TableCell className={cn("text-right",
-                                            trade.pnlNet > 0 && "text-foreground-green",
-                                            trade.pnlNet < 0 && "text-foreground-red"
-                                        )}>{Currency(dailyStats.pnlType === PnlType.Net ? trade.pnlNet.toFixed(2) : trade.pnlGross.toFixed(2))}</TableCell>
-                                        <TableCell
-                                            className={cn("text-right", trade.pnlNet > 0 && "text-foreground-green", trade.pnlNet < 0 && "text-foreground-red")}
-                                        >% {((dailyStats.pnlType === PnlType.Net ? trade.pnlNet : trade.pnlGross) / ((trade.volume / 2) * trade.averagePrice) * 100).toFixed(2)}</TableCell>
-                                        <TableCell className={"text-right"}>{trade.volume}</TableCell>
-                                        <TableCell className={"text-right"}>Execs</TableCell>
-                                        <TableCell className={"text-right"}>{
-                                            trade.tags?.map((tag) => (
-                                                <span key={tag}
-                                                      className={"text-xs bg-foreground text-background rounded-md px-1"}>{tag}</span>
-                                            ))
-                                        }</TableCell>
+                        <ScrollArea className={"h-[calc(50vh-4rem)] w-full mr-2"}>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Time</TableHead>
+                                        <TableHead>Ticker</TableHead>
+                                        <TableHead>Side</TableHead>
+                                        <TableHead className={"text-right"}>PnL</TableHead>
+                                        <TableHead className={"text-right"}>ROI</TableHead>
+                                        <TableHead className={"text-right"}>Volume</TableHead>
+                                        <TableHead className={"text-right"}>Exec Count</TableHead>
+                                        <TableHead className={"text-right"}>Tags</TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {trades?.map((trade: Trade) => (
+                                        <TableRow key={trade.id} onClick={() => { setTradeDrawerOpen(true, trade.id) }}>
+                                            <TableCell>{trade.startDate.toLocaleTimeString()}</TableCell>
+                                            <TableCell>{trade.ticker}</TableCell>
+                                            <TableCell>{trade.direction}</TableCell>
+                                            <TableCell className={cn("text-right",
+                                                trade.pnlNet > 0 && "text-foreground-green",
+                                                trade.pnlNet < 0 && "text-foreground-red"
+                                            )}>{Currency(dailyStats.pnlType === PnlType.Net ? trade.pnlNet.toFixed(2) : trade.pnlGross.toFixed(2))}</TableCell>
+                                            <TableCell
+                                                className={cn("text-right", trade.pnlNet > 0 && "text-foreground-green", trade.pnlNet < 0 && "text-foreground-red")}
+                                            >% {((dailyStats.pnlType === PnlType.Net ? trade.pnlNet : trade.pnlGross) / ((trade.volume / 2) * trade.averagePrice) * 100).toFixed(2)}</TableCell>
+                                            <TableCell className={"text-right"}>{trade.volume}</TableCell>
+                                            <TableCell className={"text-right"}>Execs</TableCell>
+                                            <TableCell className={"text-right"}>{
+                                                trade.tags?.map((tag) => (
+                                                    <span key={tag}
+                                                          className={"text-xs bg-foreground text-background rounded-md px-1"}>{tag}</span>
+                                                ))
+                                            }</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+
+                        </ScrollArea>
                     </div>
                 </div>
 

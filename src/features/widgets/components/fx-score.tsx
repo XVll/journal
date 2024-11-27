@@ -84,7 +84,7 @@ export function FxScoreWidget({ stats, betPercentage }: FxScoreWidgetProps) {
             <CardContent className="pb-0">
                 <ChartContainer
                     config={chartConfig}
-                    className="mx-auto aspect-square h-48 "
+                    className="mx-auto aspect-auto h-48 "
                 >
                     <RadarChart data={chartData}>
                         <ChartTooltip formatter={(value, s, k) => k.payload.displayValue} cursor={false}
