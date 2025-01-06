@@ -14,7 +14,7 @@ import { createHash } from "crypto";
 function CalculateCommission(execution: ExecutionInput) {
     // 0.0035 for <300k, 0.0020 for <3m, 0.0015 for <20m
     // You need to calculate monthly volume to determine the commission rate
-    return -0.002 * execution.quantity;
+    return -0.0007 * execution.quantity;
 }
 
 function CalculateFees(execution: ExecutionInput) {
